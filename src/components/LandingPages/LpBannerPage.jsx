@@ -1,0 +1,279 @@
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useParams, Link } from "react-router-dom";
+import Swal from "sweetalert2";
+import {
+  addLpBanner,
+  updateLpBanner,
+  fetchLpBannersByLpGuid,
+  deleteLpBanner,
+} from "../../services/lpBannerServices";
+import allImages from "../../assets/images-import";
+import { handleErrors } from "../../utils/errorHandler";
+import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
+import { Loading } from "../Common/OtherElements/Loading";
+import { TableDataStatusError } from "../Common/OtherElements/TableDataStatusError";
+import TableHeader from "../Common/TableComponent/TableHeader";
+import { getFullImageUrl } from "../../utils/imageUrl";
+
+const initialFormState = {
+  BannerImage: "",
+  BannerImagePreview: "",
+  DisplayOrder: "",
+};
+
+export const LpBannerPage = () => {
+  const { lpGuid } = useParams();
+  const [banners, setBanners] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState(initialFormState);
+  const [editingId, setEditingId] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  const loadBanners = async () => {
+    setLoading(true);
+    try {
+      const result = await fetchLpBannersByLpGuid(lpGuid);
+      setBanners(result || []);
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBanners();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lpGuid]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    // Keep DisplayOrder as the raw string while typing so the field can be
+    // cleared/edited freely; it's coerced to a number on submit.
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      BannerImage: file,
+      BannerImagePreview: URL.createObjectURL(file),
+    }));
+    setErrors((prev) => ({ ...prev, BannerImage: "" }));
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    let valid = true;
+    if (!editingId && !formData.BannerImage) {
+      newErrors.BannerImage = "Banner image is required";
+      valid = false;
+    }
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormState);
+    setEditingId(null);
+    setErrors({});
+  };
+
+  const toNumber = (value) => (value === "" || value === null ? 0 : Number(value));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    setIsSaving(true);
+    try {
+      const payload = new FormData();
+      payload.append("DisplayOrder", toNumber(formData.DisplayOrder));
+      if (formData.BannerImage) {
+        payload.append("BannerImage", formData.BannerImage);
+      }
+
+      if (editingId) {
+        payload.append("Id", editingId);
+        await updateLpBanner(payload);
+        toast.success("Banner updated successfully!");
+      } else {
+        payload.append("LpGuid", lpGuid);
+        await addLpBanner(payload);
+        toast.success("Banner added successfully!");
+      }
+      resetForm();
+      loadBanners();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEdit = (item) => {
+    setEditingId(item.id);
+    setFormData({
+      BannerImage: "",
+      BannerImagePreview: getFullImageUrl(item.bannerImage),
+      DisplayOrder:
+        item.displayOrder === null || item.displayOrder === undefined
+          ? ""
+          : String(item.displayOrder),
+    });
+  };
+
+  const handleDelete = async (id) => {
+    const confirmed = await confirmDelete("Banner");
+    if (confirmed) {
+      try {
+        await deleteLpBanner(id);
+        setBanners((prev) => prev.filter((item) => item.id !== id));
+        Swal.fire("Deleted!", "The banner has been deleted successfully.", "success");
+      } catch (error) {
+        handleErrors(error);
+      }
+    }
+  };
+
+  return (
+    <>
+      <div className="row">
+        <div className="col-12">
+          <div className="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 className="mb-sm-0">Manage Banners</h4>
+            <div className="page-title-right">
+              <ol className="breadcrumb m-0">
+                <li className="breadcrumb-item">
+                  <Link to="/">
+                    <i className="ri-home-2-fill"></i>
+                  </Link>
+                </li>
+                <li className="breadcrumb-item">
+                  <Link to="/landing-pages">Manage Landing Pages</Link>
+                </li>
+                <li className="breadcrumb-item">Banners</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <div className="card mt-xxl-n5 p-3">
+  <div className="card-header-wrapper p-1">
+    <h5 className="blogs-heading">{editingId ? "Edit Banner" : "Add Banner"}</h5>
+  </div>
+  <form onSubmit={handleSubmit} className="mt-3">
+    <div className="d-flex flex-wrap gap-4">
+      <div style={{ width: 280 }}>
+        <label className="form-label">
+          Banner Image {!editingId && <span className="required-field">*</span>}
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          className={`form-control ${errors.BannerImage ? "is-invalid" : ""}`}
+          onChange={handleImageChange}
+        />
+        {errors.BannerImage && (
+          <div className="invalid-feedback d-block">{errors.BannerImage}</div>
+        )}
+      </div>
+
+      <div style={{ width: 180 }}>
+        <label className="form-label">Display Order</label>
+        <input
+          type="number"
+          name="DisplayOrder"
+          value={formData.DisplayOrder}
+          placeholder="Enter Display Order"
+          onChange={handleInputChange}
+          className="form-control"
+        />
+      </div>
+    </div>
+
+    <div className="mt-3">
+      <img
+        src={formData.BannerImagePreview || allImages.DefultImage}
+        alt="Banner Preview"
+        className="rounded img-thumbnail"
+        style={{ width: 166, height: 99, objectFit: "cover" }}
+      />
+    </div>
+
+    <div className="mt-3">
+      <button type="submit" className="btn btn-secondary" disabled={isSaving}>
+        {isSaving ? (editingId ? "Updating" : "Saving") : editingId ? "Update Banner" : "Add Banner"}
+      </button>
+      {editingId && (
+        <button type="button" className="btn btn-danger ms-1" onClick={resetForm}>
+          Cancel
+        </button>
+      )}
+    </div>
+  </form>
+</div>
+      <div className="card mt-3">
+        <div className="card-body">
+          {loading ? (
+            <Loading />
+          ) : (
+            <div className="table-responsive">
+              <table className="table align-middle table-bordered">
+                <TableHeader columns={["#", "Banner", "Display Order", "Action"]} />
+                <tbody>
+                  {banners.length === 0 ? (
+                    <TableDataStatusError colspan="4" />
+                  ) : (
+                    banners
+                      .slice()
+                      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+                      .map((item, index) => (
+                        <tr key={item.id}>
+                          <td>{index + 1}</td>
+                          <td>
+                            <img
+                              src={getFullImageUrl(item.bannerImage) || allImages.DefultImage}
+                              alt="Banner"
+                              style={{ width: 166, height: 99, objectFit: "cover" }}
+                              className="rounded"
+                            />
+                          </td>
+                          <td>{item.displayOrder}</td>
+                          <td>
+                            <div className="d-flex gap-1">
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-primary"
+                                onClick={() => handleEdit(item)}
+                              >
+                                <i className="ri-pencil-line"></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-danger"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                <i className="ri-delete-bin-line"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};

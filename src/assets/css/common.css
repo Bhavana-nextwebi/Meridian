@@ -1,0 +1,418 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap');
+
+:root {
+  --meridian-navy: #17402d;
+  --meridian-navy-dark: #123626;
+  --meridian-gold: #b3945a;
+  --meridian-gold-light: #d9c98a;
+  --meridian-bg: #f4f8f5;
+  --meridian-border: #e3e0ea;
+  --meridian-input-bg: #fbfaf8;
+  --meridian-text-muted: #6b6b7a;
+  --meridian-text-label: #3a3a45;
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Poppins', sans-serif;
+   --mer-green-950: #0e2419;
+  --mer-green-900: #123626;
+  --mer-green-800: #17402d;
+  --mer-green-700: #1d4d37;
+  --mer-gold: #c9a24b;
+  --mer-gold-soft: #d8bc7a;
+  --mer-gold-dim: rgba(201, 162, 75, 0.16);
+  --mer-gold-dim-strong: rgba(201, 162, 75, 0.28);
+  --mer-ivory: #f4efe4;
+  --mer-ivory-dim: #b9c2ba;
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+/* ---------- Shared layout ---------- */
+.meridian-page-bg {
+  background-color: var(--meridian-bg);
+}
+
+.meridian-card {
+  border-radius: 6px;
+  box-shadow: 0 15px 40px rgba(23, 64, 45, 0.12) !important;
+  border: none;
+}
+
+/* ---------- Shared image panel (used on auth pages etc.) ---------- */
+.meridian-image-col {
+  position: relative;
+  min-height: 100%;
+}
+
+.meridian-image-col img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.meridian-image-overlay {
+  position: absolute;
+  inset: 1;
+  background: linear-gradient(180deg, rgba(23, 64, 45, 0.05) 0%, rgba(23, 64, 45, 0.55) 100%);
+}
+
+.meridian-image-caption {
+  position: absolute;
+  left: 32px;
+  bottom: 32px;
+  right: 32px;
+  color: #fff;
+}
+
+.meridian-image-caption .eyebrow {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--meridian-gold-light);
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.meridian-image-caption h5 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 22px;
+  margin: 0;
+}
+
+/* ---------- Shared typography ---------- */
+.meridian-eyebrow {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--meridian-gold);
+  font-weight: 600;
+}
+
+.meridian-heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--meridian-navy);
+  font-size: 30px;
+  margin: 6px 0 8px;
+}
+
+.meridian-divider {
+  width: 46px;
+  height: 2px;
+  background: var(--meridian-gold);
+  margin: 0 auto 18px;
+}
+
+.meridian-subtext {
+  color: var(--meridian-text-muted);
+  font-size: 14.5px;
+}
+
+/* ---------- Shared form controls ---------- */
+.meridian-input {
+  border: 1px solid var(--meridian-border);
+  border-radius: 4px;
+  background: var(--meridian-input-bg);
+  font-size: 14.5px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.meridian-input:focus {
+  border-color: var(--meridian-navy);
+  box-shadow: 0 0 0 3px rgba(23, 64, 45, 0.08);
+  background: #fff;
+}
+
+.meridian-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--meridian-text-label);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.meridian-link-gold {
+  font-size: 13.5px;
+  color: var(--meridian-gold) !important;
+  text-decoration: none;
+}
+.meridian-link-gold:hover {
+  color: var(--meridian-navy) !important;
+}
+
+.meridian-btn {
+  background-color: var(--meridian-navy);
+  border: 1px solid var(--meridian-navy);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 13px;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+.meridian-btn:hover:not(:disabled) {
+  background-color: var(--meridian-navy-dark);
+}
+.meridian-btn:hover:not(:disabled){
+    color:white;
+}
+
+.meridian-btn:disabled {
+  opacity: 0.7;
+}
+
+.form-check-input:checked {
+  background-color: var(--meridian-navy) !important;
+  border-color: var(--meridian-navy) !important;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(23, 64, 45, 0.12) !important;
+}
+
+/* ===== Submenu links (Create Roles / Add User / Manage User) ===== */
+/* ===== Submenu links (Create Roles / Add User / Manage User) ===== */
+html body .app-menu .navbar-nav .nav-sm .nav-link,
+html body .navbar-menu .navbar-nav .nav-sm .nav-link,
+html[data-layout="vertical"] .navbar-nav .nav-sm .nav-link,
+html[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-sm .nav-link {
+  color: var(--mer-ivory-dim) !important;
+}
+
+html body .app-menu .navbar-nav .nav-sm .nav-link:hover,
+html body .app-menu .navbar-nav .nav-sm .nav-item.active > .nav-link,
+html[data-layout="vertical"] .navbar-nav .nav-sm .nav-link:hover,
+html[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-sm .nav-link:hover,
+html[data-layout="vertical"][data-sidebar-size="sm"] .navbar-menu .navbar-nav .nav-sm .nav-item:hover > .nav-link {
+  color: var(--meridian-gold) !important;
+}
+
+html body .app-menu .navbar-nav .nav-sm .nav-link:before,
+html body .app-menu .navbar-nav .nav-sm .nav-link:hover:before {
+  background-color: var(--meridian-gold) !important;
+}
+
+/* Top-level items */
+.app-menu .navbar-nav .nav-link:hover,
+.app-menu .navbar-nav .nav-link:focus,
+.app-menu .navbar-nav .nav-link.active {
+  color: var(--meridian-gold) !important;
+}
+.app-menu .navbar-nav .nav-link:hover i {
+  color: var(--meridian-gold) !important;
+}
+
+/* Parent link text when hovered/expanded in collapsed mode */
+html[data-layout="vertical"][data-sidebar-size="sm"] .navbar-menu .navbar-nav .nav-item:hover > a.menu-link {
+  color: var(--meridian-gold) !important;
+  background-color: var(--mer-green-700) !important;
+}
+
+/* ===== Dropdown / flyout box on collapse ===== */
+html body .app-menu .navbar-nav .menu-dropdown,
+html body .app-menu .navbar-nav .nav-item:hover > .menu-dropdown,
+html[data-layout="vertical"][data-sidebar-size="sm"] .navbar-menu .navbar-nav .nav-item:hover > .menu-dropdown,
+html body .app-menu .navbar-nav .menu-dropdown.show {
+  background: #133727 !important;
+}
+/* ===== Submenu marker: dash instead of dot ===== */
+html body .app-menu .navbar-nav .nav-sm .nav-link:before {
+  width: 8px !important;
+  height: 2px !important;
+  border-radius: 0 !important;
+  background-color: var(--mer-ivory-dim) !important;
+}
+
+html body .app-menu .navbar-nav .nav-sm .nav-link:hover:before,
+html body .app-menu .navbar-nav .nav-sm .nav-item.active > .nav-link:before {
+  background-color: var(--meridian-gold) !important;
+}
+
+/* ===== Buttons ===== */
+.btn-secondary {
+  background-color: var(--meridian-gold) !important;
+  border-color: var(--meridian-gold) !important;
+  color: var(--mer-green-900) !important;
+}
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+  background-color: var(--mer-gold-soft) !important;
+  border-color: var(--mer-gold-soft) !important;
+  color: var(--mer-green-900) !important;
+}
+
+/* ===== Form inputs / selects (AddUser, UpdateUser, ManageUser search box) ===== */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--mer-green-800) !important;
+  box-shadow: 0 0 0 3px rgba(23, 64, 45, 0.1) !important;
+}
+
+/* ===== Required-field asterisk ===== */
+.required-field {
+  color: var(--meridian-gold) !important;
+}
+
+/* ===== Links (breadcrumbs, table links, "Manage Users" nav) ===== */
+a,
+.breadcrumb-item a {
+  color: var(--mer-green-800);
+}
+a:hover,
+.breadcrumb-item a:hover {
+  color: var(--meridian-gold) !important;
+}
+
+/* ===== Card headers (Add User / Update User / Manage Users titles) ===== */
+.card-header h5 {
+  color: var(--mer-green-800);
+  font-family: var(--font-heading);
+}
+
+/* ===== Badges (Reset Password badge in ManageUser table) ===== */
+.badge.text-bg-warning {
+  background-color: var(--meridian-gold) !important;
+  color: #fff !important;
+}
+
+/* ===== Password show/hide icon buttons (AddUser) ===== */
+.viewhidePassword,
+.view-hide-password-invalid {
+  color: var(--meridian-navy) !important;
+}
+.viewhidePassword:hover,
+.view-hide-password-invalid:hover {
+  color: var(--meridian-gold) !important;
+}
+
+/* ===== Avatar upload icon (profile photo edit button) ===== */
+.avatar-title.bg-light {
+  background-color: var(--meridian-navy) !important;
+  color: #fff !important;
+}
+
+/* ===== react-phone-number-input focus state ===== */
+.PhoneInputInput:focus {
+  border-color: var(--meridian-navy) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(23, 64, 45, 0.1);
+}
+
+/* ===== Pagination active state (Manage Users table) ===== */
+.page-item.active .page-link {
+  background-color: var(--mer-green-800) !important;
+  border-color: var(--mer-green-800) !important;
+}
+.page-link {
+  color: var(--mer-green-800);
+}
+.page-link:hover {
+  color: var(--meridian-gold);
+}
+/* Parent link text when hovered/expanded in collapsed mode */
+html[data-layout="vertical"][data-sidebar-size="sm"] .navbar-menu .navbar-nav .nav-item:hover > a.menu-link {
+  color: var(--meridian-gold) !important;
+  background-color: var(--mer-green-700) !important;
+}
+/* Parent link background on hover — expanded sidebar */
+html body .app-menu .navbar-nav .nav-link.menu-link:hover,
+html body .app-menu .navbar-nav .nav-link.menu-link[aria-expanded="true"] {
+  background-color: var(--mer-green-700) !important;
+  color: var(--meridian-gold) !important;
+}
+.menu-dropdown.collapse.show{
+ background-color: var(--mer-green-700) !important;
+}
+.menu-dropdown.collapse.show:hover{
+ background-color: var(--mer-green-700) !important;
+}
+.btn-icon.rounded-circle {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.publish-toggle-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.publish-toggle {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.publish-toggle input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.publish-toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background-color: #dc3545;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.25s ease;
+}
+
+.publish-toggle.is-published .publish-toggle-track {
+  background-color: #28a745;
+}
+
+.publish-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s ease;
+}
+
+.publish-toggle.is-published .publish-toggle-thumb {
+  transform: translateX(22px);
+}
+
+.publish-toggle input:focus-visible ~ .publish-toggle-track {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+.publish-toggle.is-updating {
+  cursor: not-allowed;
+}
+
+.publish-toggle.is-updating .publish-toggle-track {
+  opacity: 0.6;
+}
+
+.publish-toggle-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,204 @@
+/* ============================================================
+   MERIDIAN BRAND THEME — GLOBAL (applies to every page, not just
+   the sidebar). Retints Velzon's default indigo/blue brand colors
+   and a handful of hardcoded one-off colors that had crept into
+   app.min.css / common.css, so the whole admin panel reads as one
+   consistent three-color system: deep lawn green, champagne gold,
+   and white/ivory. Loaded last so it wins the cascade.
+   ============================================================ */
+
+:root {
+  /* Retint Bootstrap/Velzon's compiled brand hooks */
+  --vz-primary: #1d4d37;
+  --vz-primary-rgb: 29, 77, 55;
+  --vz-secondary: #c9a24b;
+  --vz-secondary-rgb: 201, 162, 75;
+  --vz-info: #17402d;
+  --vz-info-rgb: 23, 64, 45;
+  --vz-link-color: #17402d;
+  --vz-link-hover-color: #b3945a;
+
+  --bs-link-color: #17402d;
+  --bs-link-hover-color: #b3945a;
+  --bs-header-bg: #123626;
+  --bs-header-item-color: #f4efe4;
+  --bs-topbar-search-bg: #17402d;
+  --bs-topbar-user-bg: #17402d;
+}
+
+/* ---------- Buttons: green primary, gold secondary, everywhere ---------- */
+.btn-primary {
+  --vz-btn-color: #fff;
+  --vz-btn-bg: #1d4d37;
+  --vz-btn-border-color: #1d4d37;
+  --vz-btn-hover-color: #fff;
+  --vz-btn-hover-bg: #17402d;
+  --vz-btn-hover-border-color: #123626;
+  --vz-btn-focus-shadow-rgb: 29, 77, 55;
+  --vz-btn-active-color: #fff;
+  --vz-btn-active-bg: #123626;
+  --vz-btn-active-border-color: #0e2419;
+  --vz-btn-disabled-color: #fff;
+  --vz-btn-disabled-bg: #1d4d37;
+  --vz-btn-disabled-border-color: #1d4d37;
+}
+
+.btn-outline-primary {
+  --vz-btn-color: #1d4d37;
+  --vz-btn-border-color: #1d4d37;
+  --vz-btn-hover-color: #fff;
+  --vz-btn-hover-bg: #1d4d37;
+  --vz-btn-hover-border-color: #1d4d37;
+  --vz-btn-active-color: #fff;
+  --vz-btn-active-bg: #1d4d37;
+  --vz-btn-active-border-color: #1d4d37;
+  --vz-btn-disabled-color: #1d4d37;
+  --vz-btn-disabled-border-color: #1d4d37;
+}
+
+.btn-outline-secondary {
+  --vz-btn-color: #b3945a;
+  --vz-btn-border-color: #b3945a;
+  --vz-btn-hover-color: #17402d;
+  --vz-btn-hover-bg: #b3945a;
+  --vz-btn-hover-border-color: #b3945a;
+  --vz-btn-active-color: #17402d;
+  --vz-btn-active-bg: #b3945a;
+  --vz-btn-active-border-color: #b3945a;
+  --vz-btn-disabled-color: #b3945a;
+  --vz-btn-disabled-border-color: #b3945a;
+}
+
+.btn-info {
+  --vz-btn-color: #fff;
+  --vz-btn-bg: #4b7a63;
+  --vz-btn-border-color: #4b7a63;
+  --vz-btn-hover-color: #fff;
+  --vz-btn-hover-bg: #3d6551;
+  --vz-btn-hover-border-color: #3d6551;
+  --vz-btn-active-color: #fff;
+  --vz-btn-active-bg: #3d6551;
+  --vz-btn-active-border-color: #3d6551;
+  --vz-btn-disabled-color: #fff;
+  --vz-btn-disabled-bg: #4b7a63;
+  --vz-btn-disabled-border-color: #4b7a63;
+}
+
+/* Dead/mismatched selectors left in app.min.css that used the wrong
+   custom-property prefix (--bs-btn-* instead of --vz-btn-*) — fixed
+   here defensively in case any build resolves them differently. */
+.btn-secondary {
+  --vz-btn-bg: #c9a24b;
+  --vz-btn-border-color: #c9a24b;
+}
+
+/* ---------- Component active/checked states baked in indigo ---------- */
+.accordion {
+  --vz-accordion-active-color: #123626;
+  --vz-accordion-active-bg: rgba(29, 77, 55, 0.06);
+}
+.list-group {
+  --vz-list-group-active-bg: #1d4d37;
+  --vz-list-group-active-border-color: #1d4d37;
+}
+.nav-pills {
+  --vz-nav-pills-link-active-bg: #1d4d37;
+}
+.pagination {
+  --vz-pagination-active-bg: #1d4d37 !important;
+  --vz-pagination-active-border-color: #1d4d37 !important;
+}
+.progress {
+  --vz-progress-bar-bg: #1d4d37;
+}
+.form-range::-webkit-slider-thumb {
+  background-color: #1d4d37;
+}
+.form-range::-moz-range-thumb {
+  background-color: #1d4d37;
+}
+.form-check-input:checked {
+  background-color: #1d4d37 !important;
+  border-color: #1d4d37 !important;
+}
+
+/* ---------- Topbar: unify with the green sidebar instead of white ---------- */
+#page-topbar {
+  background-color: #123626 !important;
+  box-shadow: 0 2px 4px rgba(14, 36, 25, 0.25);
+}
+#page-topbar .navbar-brand-box {
+  background-color: transparent;
+}
+#page-topbar .topnav-hamburger .hamburger-icon span {
+  background-color: #f4efe4;
+}
+#page-topbar .btn-topbar,
+#page-topbar .header-item {
+  color: #f4efe4;
+}
+#page-topbar .btn-topbar:hover,
+#page-topbar .header-item:hover {
+  color: #c9a24b;
+}
+#page-topbar .user-name-text {
+  color: #f4efe4;
+}
+
+/* ---------- Page background: soft green-white wash, cards stay white ---------- */
+[data-layout-mode="light"] .main-content {
+  background-color: #f2f7f4 !important;
+}
+[data-layout-mode="dark"] .main-content {
+  background-color: #0e1a14 !important;
+}
+.meridian-page-bg {
+  background-color: #f4f8f5;
+}
+
+/* ---------- Stray hardcoded indigo accents found across the app ---------- */
+.manage-page-group i.ri-pencil-fill,
+.ri-edit-2-fill:before {
+  color: #17402d;
+}
+.ri-mail-fill:before,
+.ri-phone-fill:before {
+  color: #17402d;
+}
+[data-layout-mode="light"] .navbar-menu .navbar-nav .nav-sm .nav-item.active .nav-link {
+  color: #c9a24b !important;
+}
+.nav-success.nav-tabs-custom .nav-link.active {
+  color: #17402d;
+}
+.nav-success.nav-tabs-custom .nav-link.active::after {
+  background-color: #17402d !important;
+}
+.gallery-modal-heading {
+  color: #17402d;
+}
+.PhoneInput {
+  color: #123626;
+}
+.fw-semibold {
+  color: #17402d;
+}
+[data-layout-mode="dark"] .fw-semibold {
+  color: #d8bc7a;
+}
+.btn-download {
+  border: 2px solid #17402d !important;
+  background-color: #ffffff !important;
+  color: #17402d !important;
+}
+.btn-download:hover {
+  background-color: #17402d !important;
+  color: #ffffff !important;
+}
+[data-layout-mode="dark"] .btn-download {
+  border: 2px solid #c9a24b !important;
+  color: #c9a24b !important;
+}
+.spinner-circle {
+  border-top-color: #1d4d37 !important;
+}

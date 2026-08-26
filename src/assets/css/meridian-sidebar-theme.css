@@ -1,0 +1,186 @@
+/* ============================================================
+   MERIDIAN SIDEBAR THEME
+   Palette inspired by Meridian by the Lawns (meridianbythelawns.com) —
+   a luxury wedding/event venue brand: deep lawn-green backdrop with
+   warm champagne-gold accents, evoking the venue's gardens + gilded
+   banquet interiors. Scoped to the sidebar only, layered on top of
+   Velzon's existing dark-sidebar variables (loaded after app.min.css).
+   ============================================================ */
+
+:root {
+  /* --- Meridian palette --- */
+  --mer-green-950: #0e2419;
+  --mer-green-900: #123626;
+  --mer-green-800: #17402d;
+  --mer-green-700: #1d4d37;
+  --mer-gold: #c9a24b;
+  --mer-gold-soft: #d8bc7a;
+  --mer-gold-dim: rgba(201, 162, 75, 0.16);
+  --mer-gold-dim-strong: rgba(201, 162, 75, 0.28);
+  --mer-ivory: #f4efe4;
+  --mer-ivory-dim: #b9c2ba;
+
+  /* --- Wire Velzon's dark-sidebar hooks to the palette --- */
+  --vz-vertical-menu-bg-dark: var(--mer-green-900);
+  --vz-vertical-menu-item-color-dark: var(--mer-ivory-dim);
+  --vz-vertical-menu-item-hover-color-dark: var(--mer-ivory);
+  --vz-vertical-menu-item-active-color-dark: var(--mer-gold-soft);
+  --vz-vertical-menu-sub-item-color-dark: #a7b2a9;
+  --vz-vertical-menu-sub-item-hover-color-dark: var(--mer-ivory);
+  --vz-vertical-menu-sub-item-active-color-dark: var(--mer-gold-soft);
+  --vz-vertical-menu-title-color-dark: var(--mer-gold);
+}
+
+/* --- Sidebar surface: subtle top-to-bottom depth, like light falling
+   across a lawn at dusk --- */
+[data-layout="vertical"][data-sidebar="dark"] .navbar-menu {
+  background: linear-gradient(
+    180deg,
+    var(--mer-green-800) 0%,
+    var(--mer-green-900) 40%,
+    var(--mer-green-950) 100%
+  );
+  border-right: none;
+  box-shadow: 1px 0 0 var(--mer-gold-dim);
+}
+
+/* --- Brand box: gilded bottom edge instead of a hard line --- */
+[data-layout="vertical"][data-sidebar="dark"] .navbar-brand-box {
+  position: relative;
+  border-bottom: 1px solid var(--mer-gold-dim);
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-brand-box::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--mer-gold) 50%,
+    transparent
+  );
+}
+
+/* --- Menu section titles: small gilded label + trailing rule --- */
+[data-layout="vertical"][data-sidebar="dark"] .menu-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 16px;
+  opacity: 0.9;
+}
+[data-layout="vertical"][data-sidebar="dark"] .menu-title span {
+  padding: 14px 20px 14px 20px;
+  white-space: nowrap;
+}
+[data-layout="vertical"][data-sidebar="dark"] .menu-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--mer-gold-dim), transparent);
+}
+
+/* --- Top-level links: soft pill, gilded rail on hover/active --- */
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item {
+  padding: 0 12px;
+  margin-bottom: 2px;
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link,
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > a.nav-link {
+  position: relative;
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--mer-gold);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  transform: translateX(2px);
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link.active,
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link[aria-expanded="true"] {
+  background-color: var(--mer-gold-dim);
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link.active::before,
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link[aria-expanded="true"]::before {
+  opacity: 1;
+}
+
+/* --- Icon chip: gives each icon a small gilded backdrop on hover/active --- */
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+  border-radius: 7px;
+  font-size: 16px;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link:hover i {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link.active i,
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav > .nav-item > .nav-link[aria-expanded="true"] i {
+  background-color: var(--mer-gold-dim-strong);
+  color: var(--mer-gold-soft);
+}
+
+/* --- Submenu items: quieter, indented, gold tick on active --- */
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-sm {
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  margin-left: 30px;
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-sm .nav-link {
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-sm .nav-link:before {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-sm .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-sm .nav-link.active {
+  background-color: rgba(201, 162, 75, 0.1);
+  font-weight: 500;
+}
+
+/* --- Scrollbar (SimpleBar): thin gilded thumb instead of default grey --- */
+[data-layout="vertical"][data-sidebar="dark"] #scrollbar .simplebar-scrollbar::before {
+  background: var(--mer-gold-dim-strong);
+}
+[data-layout="vertical"][data-sidebar="dark"] #scrollbar .simplebar-scrollbar.simplebar-visible::before {
+  opacity: 0.6;
+}
+
+/* --- Toggle / collapse caret picks up the gold accent when open --- */
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-link[data-bs-toggle="collapse"][aria-expanded="true"]:after {
+  color: var(--mer-gold-soft);
+}
+
+/* --- Vertical-hover collapse button --- */
+[data-layout="vertical"][data-sidebar="dark"] .btn-vertical-sm-hover {
+  color: var(--mer-gold-soft);
+}
