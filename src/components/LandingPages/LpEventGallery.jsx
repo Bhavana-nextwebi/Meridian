@@ -16,13 +16,8 @@ import { Loading } from "../Common/OtherElements/Loading";
 import { TableDataStatusError } from "../Common/OtherElements/TableDataStatusError";
 import TableHeader from "../Common/TableComponent/TableHeader";
 import { getFullImageUrl } from "../../utils/imageUrl";
-import { validateImageFile } from "../../utils/imageValidation";
 
-const GALLERY_IMAGE_RULES = {
-  aspectRatio: 4 / 3,
-  recommendedLabel: "4:3, e.g. 400×300px",
-  maxSizeMB: 2,
-};
+
 
 const initialFormState = {
   ImageUrl: "",
@@ -67,13 +62,13 @@ export const LpEventGallery = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const result = await validateImageFile(file, GALLERY_IMAGE_RULES);
-    if (!result.valid) {
-      setErrors((prev) => ({ ...prev, ImageUrl: result.error }));
-      toast.error(result.error);
-      e.target.value = "";
-      return;
-    }
+    // const result = await validateImageFile(file, GALLERY_IMAGE_RULES);
+    // if (!result.valid) {
+    //   setErrors((prev) => ({ ...prev, ImageUrl: result.error }));
+    //   toast.error(result.error);
+    //   e.target.value = "";
+    //   return;
+    // }
 
     setFormData((prev) => ({
       ...prev,

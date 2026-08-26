@@ -14,20 +14,7 @@ import { handleErrors } from "../../utils/errorHandler";
 import { Loading } from "../Common/OtherElements/Loading";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 import { getFullImageUrl } from "../../utils/imageUrl";
-import { validateImageFile } from "../../utils/imageValidation";
 
-const IMAGE_RULES = {
-  BanquetHallImage: {
-    aspectRatio: 1,
-    recommendedLabel: "square (1:1), e.g. 1024×1024px",
-    maxSizeMB: 3,
-  },
-  WhyChooseImage: {
-    aspectRatio: 1,
-    recommendedLabel: "square (1:1), e.g. 1024×1024px",
-    maxSizeMB: 3,
-  },
-};
 
 export const AddLandingPage = ({
   editMode = false,
@@ -155,15 +142,15 @@ export const AddLandingPage = ({
     const file = e.target.files[0];
     if (!file) return;
 
-    const rules = IMAGE_RULES[imageField];
-    const result = await validateImageFile(file, rules);
 
-    if (!result.valid) {
-      setErrors((prevErrors) => ({ ...prevErrors, [imageField]: result.error }));
-      toast.error(result.error);
-      e.target.value = "";
-      return;
-    }
+    //const result = await validateImageFile(file, rules);
+
+    // if (!result.valid) {
+    //   setErrors((prevErrors) => ({ ...prevErrors, [imageField]: result.error }));
+    //   toast.error(result.error);
+    //   e.target.value = "";
+    //   return;
+    // }
 
     setFormData((prevData) => ({
       ...prevData,

@@ -627,7 +627,7 @@ export const AddBlogs = ({
                           formData.BlogImagePreview || allImages.DefultImage
                         }
                         className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
-                        alt="Blog Image Preview"
+                        alt="blog"
                       />
 
                       <div className="avatar-xs p-0 rounded-circle profile-photo-edit">

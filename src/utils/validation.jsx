@@ -801,10 +801,6 @@ export const validateServicesData = (formData) => {
 
   return { valid, errors };
 };
-const isValidUrl = (url) => {
-  const urlPattern = new RegExp("^[a-z0-9-]+$", "i");
-  return !!urlPattern.test(url);
-};
 
 const isValidPostedOnDate = (dateString) => {
   const datePattern = /^\d{2}-[A-Za-z]{3}-\d{4}$/;

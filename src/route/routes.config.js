@@ -28,7 +28,7 @@ import { ManageAccessPage } from "../pages/ManageAccess";
 import { NewUser } from "../pages/NewUser";
 import { NewUserView } from "../pages/NewUserView";
 import { NewUserUpdate } from "../pages/NewUserUpdate";
-import { UserDashboardPage } from "../pages/UserDashboardPage";
+
 import  {AlbumCategory} from "../pages/AlbumCategory";
 import { BlogTag } from "../pages/BlogTag";
 import { AlbumAdd } from "../pages/AlbumAdd";
@@ -117,7 +117,7 @@ const routes = [
     {path:"contact-enquiry",element:<ContactEnquiry/>},
     {path:"landing-page-enquiry",element:<LandingPageEnquiry/>},
       { path: "dashboard", element: <DashboardPage /> },
-      { path: "user-dashboard", element: <UserDashboardPage /> },
+     
       { path: "my-profile", element: <ProfilePage /> },
       { path: "change-password", element: <ChangePassword /> },
       {path:"album-category",element:<AlbumCategory/>},

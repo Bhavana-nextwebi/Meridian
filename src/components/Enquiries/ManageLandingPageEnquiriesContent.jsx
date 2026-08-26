@@ -23,7 +23,7 @@ const truncateMessage = (message, maxLength = 60) => {
     ? `${message.substring(0, maxLength)}...`
     : message;
 };
-3
+
 export const ManageLandingPageEnquiriesContent = () => {
   const [pageAccessDetails, setPageAccessDetails] = useState([]);
   const PageLevelAccessurl = "contact-us";

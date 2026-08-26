@@ -16,13 +16,9 @@ import { Loading } from "../Common/OtherElements/Loading";
 import { TableDataStatusError } from "../Common/OtherElements/TableDataStatusError";
 import TableHeader from "../Common/TableComponent/TableHeader";
 import { getFullImageUrl } from "../../utils/imageUrl";
-import { validateImageFile } from "../../utils/imageValidation";
 
-const SPACE_IMAGE_RULES = {
-  aspectRatio: 415 / 247,
-  recommendedLabel: "~5:3, e.g. 415×247px",
-  maxSizeMB: 2,
-};
+
+
 
 const initialFormState = {
   SpaceTitle: "",
@@ -73,13 +69,13 @@ export const LpBanquetSpaceDetails = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const result = await validateImageFile(file, SPACE_IMAGE_RULES);
-    if (!result.valid) {
-      setErrors((prev) => ({ ...prev, SpaceImage: result.error }));
-      toast.error(result.error);
-      e.target.value = "";
-      return;
-    }
+    // const result = await validateImageFile(file, SPACE_IMAGE_RULES);
+    // if (!result.valid) {
+    //   setErrors((prev) => ({ ...prev, SpaceImage: result.error }));
+    //   toast.error(result.error);
+    //   e.target.value = "";
+    //   return;
+    // }
 
     setFormData((prev) => ({
       ...prev,

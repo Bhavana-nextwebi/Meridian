@@ -16,13 +16,8 @@ import { Loading } from "../Common/OtherElements/Loading";
 import { TableDataStatusError } from "../Common/OtherElements/TableDataStatusError";
 import TableHeader from "../Common/TableComponent/TableHeader";
 import { getFullImageUrl } from "../../utils/imageUrl";
-import { validateImageFile } from "../../utils/imageValidation";
 
-const TESTIMONIAL_IMAGE_RULES = {
-  aspectRatio: 1,
-  recommendedLabel: "square (1:1), e.g. 300×300px",
-  maxSizeMB: 1,
-};
+
 
 const initialFormState = {
   TestimonialName: "",
@@ -74,13 +69,13 @@ export const LpTestimonials = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const result = await validateImageFile(file, TESTIMONIAL_IMAGE_RULES);
-    if (!result.valid) {
-      setErrors((prev) => ({ ...prev, TestimonialImage: result.error }));
-      toast.error(result.error);
-      e.target.value = "";
-      return;
-    }
+    // const result = await validateImageFile(file, TESTIMONIAL_IMAGE_RULES);
+    // if (!result.valid) {
+    //   setErrors((prev) => ({ ...prev, TestimonialImage: result.error }));
+    //   toast.error(result.error);
+    //   e.target.value = "";
+    //   return;
+    // }
 
     setFormData((prev) => ({
       ...prev,

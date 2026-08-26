@@ -1,9 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import { DashboardIntro } from '../components/Dashboard/DashboardIntro'
-import { DashboardBasicDetails } from '../components/Dashboard/DashboardBasicDetails'
-import { DashboardRevenue } from '../components/Dashboard/DashboardRevenue'
-import { DashboardUpcomingVacations } from '../components/Dashboard/DashboardUpcomingVacations'
-import { DashboardAssetsOrders } from '../components/Dashboard/DashboardAssetsOrders'
+
 import { useNavigate } from 'react-router-dom';
 import { fetchUserProfile } from '../services/newUserService';
 import ComponentHeader from '../components/Common/OtherElements/ComponentHeader'
@@ -21,11 +18,10 @@ export const DashboardPage = () => {
 
                 if (userData.data.result.userRole === 1) {
                     setSectionDisabled(false);
-                } else if (userData.data.result.id === 96) {
-                    setSectionDisabled(false);
-                } else {
+                } 
+                else {
                     setSectionDisabled(true);
-                    navigate('/user-dashboard'); 
+                    navigate('/dashboard'); 
                 }
             } catch (error) {
                 handleErrors(error);
@@ -47,10 +43,8 @@ export const DashboardPage = () => {
                                     <DashboardIntro />
                                     {sectiondisable ? '' : (
                                         <>
-                                            {/* <DashboardBasicDetails /> */}
-                                            {/* <DashboardUpcomingVacations />
-                                            <DashboardRevenue />
-                                            <DashboardAssetsOrders /> */}
+                                            
+                                            
                                         </>
                                     )}
 
