@@ -26,7 +26,7 @@ export const updateBlog = async (payload) => {
 };
 
 export const deleteBlog = async (blogId) => {
-  return await axiosInstance.delete(`blog/${blogId}`, { headers });
+  return await axiosInstance.delete(`blog/delete/${blogId}`, { headers });
 };
 
 // PUT /api/v1/blog/publish-unpublish

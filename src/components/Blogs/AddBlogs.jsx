@@ -213,7 +213,7 @@ export const AddBlogs = ({
     payload.append("BlogTitle", formData.BlogTitle);
     payload.append("BlogUrl", formData.BlogUrl);
     formData.TagId.forEach((tagId) => payload.append("TagId", tagId));
-   payload.append("PostedOn", new Date(formData.PostedOn).toISOString());
+    payload.append("PostedOn", new Date(formData.PostedOn).toISOString());
     payload.append("PostedBy", formData.PostedBy);
     payload.append("FullDescription", formData.FullDescription);
     payload.append("PageTitle", formData.PageTitle);
@@ -228,7 +228,7 @@ export const AddBlogs = ({
     return payload;
   };
 
-  // Clears the form back to its empty state after a successful "Add".
+  // Clears the form back to its empty state after a successful "Add" or "Update".
   // Also resets the TinyMCE content and the flatpickr-driven date input.
   const resetFormAfterAdd = () => {
     setFormData({ ...EMPTY_FORM_DATA });
@@ -255,6 +255,8 @@ export const AddBlogs = ({
           await updateBlog(payload);
           toast.success("Blog updated successfully!");
           setIsButtonDisabled(false);
+          resetFormAfterAdd();
+          navigate("/blogs");
         } else {
           setIsButtonDisabled(true);
           await addBlog(payload);

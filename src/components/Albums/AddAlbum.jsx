@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -118,6 +118,12 @@ export const AddAlbum = ({
   const [apiError, setApiError] = useState("");
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [PageLevelAccessurl, setPageLevelAccessurl] = useState();
+
+  // Refs so we can clear the native file inputs after a successful
+  // create — clearing formData alone doesn't reset an
+  // uncontrolled <input type="file">'s displayed selection.
+  const imageInputRef = useRef(null);
+  const videoInputRef = useRef(null);
 
   useEffect(() => {
     if (id) {
@@ -312,6 +318,17 @@ export const AddAlbum = ({
     return payload;
   };
 
+  // Clears form state, validation errors, and the native file inputs.
+  // Used after a successful create so the form is ready for the next
+  // album instead of still showing the one that was just submitted.
+  const resetForm = () => {
+    setFormData(emptyFormData);
+    setErrors({});
+    setApiError("");
+    if (imageInputRef.current) imageInputRef.current.value = "";
+    if (videoInputRef.current) videoInputRef.current.value = "";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -327,11 +344,13 @@ export const AddAlbum = ({
           setIsButtonDisabled(true);
           await updateAlbum(payload);
           toast.success("Album updated successfully!");
+          resetForm();
           setIsButtonDisabled(false);
         } else {
           setIsButtonDisabled(true);
           await createAlbum(payload);
           toast.success("Album added successfully!");
+          resetForm();
           setIsButtonDisabled(false);
         }
       } catch (error) {
@@ -345,9 +364,7 @@ export const AddAlbum = ({
   };
 
   const handleAddNewClick = () => {
-    setFormData(emptyFormData);
-    setErrors({});
-    setApiError("");
+    resetForm();
     setSelectedPageGroup(null);
     setEditMode(false);
   };
@@ -572,6 +589,7 @@ export const AddAlbum = ({
                         <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
                           <input
                             id="albumImage"
+                            ref={imageInputRef}
                             type="file"
                             accept="image/*"
                             className="profile-img-file-input"
@@ -616,6 +634,7 @@ export const AddAlbum = ({
                       )}
                       <input
                         id="albumVideo"
+                        ref={videoInputRef}
                         type="file"
                         accept="video/*"
                         className={`form-control ${
