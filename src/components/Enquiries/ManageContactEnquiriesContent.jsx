@@ -114,27 +114,6 @@ export const ManageContactEnquiriesContent = () => {
     }
   };
 
-  const handleView = (item) => {
-    Swal.fire({
-      title: item.fullName || "Contact Enquiry",
-      html: `
-        <div style="text-align:left">
-          <p><strong>Email:</strong> ${item.emailAddress || "-"}</p>
-          <p><strong>Phone:</strong> ${item.phoneNumber || "-"}</p>
-          <p><strong>Event Type:</strong> ${item.eventType || "-"}</p>
-          <p><strong>Added On:</strong> ${
-            item.addedOn ? new Date(item.addedOn).toLocaleString() : "-"
-          }</p>
-          <p><strong>Status:</strong> ${getStatusLabel(item.status)}</p>
-          <hr />
-          <p><strong>Message:</strong></p>
-          <p>${item.message || "-"}</p>
-        </div>
-      `,
-      confirmButtonText: "Close",
-      width: 600,
-    });
-  };
 
   return (
     <>
