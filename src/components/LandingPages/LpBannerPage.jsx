@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams, Link } from "react-router-dom";
@@ -31,6 +31,7 @@ export const LpBannerPage = () => {
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const bannerImageInputRef = useRef(null);
 
   const loadBanners = async () => {
     setLoading(true);
@@ -83,6 +84,11 @@ export const LpBannerPage = () => {
     setFormData(initialFormState);
     setEditingId(null);
     setErrors({});
+    // File inputs are uncontrolled - clearing formData alone doesn't clear
+    // the browser's displayed "chosen file" label, so reset it explicitly.
+    if (bannerImageInputRef.current) {
+      bannerImageInputRef.current.value = "";
+    }
   };
 
   const toNumber = (value) => (value === "" || value === null ? 0 : Number(value));
@@ -127,6 +133,11 @@ export const LpBannerPage = () => {
           ? ""
           : String(item.displayOrder),
     });
+    // A new file hasn't been chosen for this edit yet, so clear any
+    // leftover selection from a previous add/edit in the same input.
+    if (bannerImageInputRef.current) {
+      bannerImageInputRef.current.value = "";
+    }
   };
 
   const handleDelete = async (id) => {
@@ -176,6 +187,7 @@ export const LpBannerPage = () => {
           Banner Image {!editingId && <span className="required-field">*</span>}
         </label>
         <input
+          ref={bannerImageInputRef}
           type="file"
           accept="image/*"
           className={`form-control ${errors.BannerImage ? "is-invalid" : ""}`}

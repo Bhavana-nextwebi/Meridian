@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams, Link } from "react-router-dom";
@@ -36,6 +36,7 @@ export const LpTestimonials = () => {
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const testimonialImageInputRef = useRef(null);
 
   const loadTestimonials = async () => {
     setLoading(true);
@@ -104,6 +105,11 @@ export const LpTestimonials = () => {
     setFormData(initialFormState);
     setEditingId(null);
     setErrors({});
+    // File inputs are uncontrolled - clearing formData alone doesn't clear
+    // the browser's displayed "chosen file" label, so reset it explicitly.
+    if (testimonialImageInputRef.current) {
+      testimonialImageInputRef.current.value = "";
+    }
   };
 
   const toNumber = (value) => (value === "" || value === null ? 0 : Number(value));
@@ -155,6 +161,11 @@ export const LpTestimonials = () => {
           ? ""
           : String(item.displayOrder),
     });
+    // A new file hasn't been chosen for this edit yet, so clear any
+    // leftover selection from a previous add/edit in the same input.
+    if (testimonialImageInputRef.current) {
+      testimonialImageInputRef.current.value = "";
+    }
   };
 
   const handleDelete = async (id) => {
@@ -265,6 +276,7 @@ export const LpTestimonials = () => {
                 />
                 <div>
                   <input
+                    ref={testimonialImageInputRef}
                     type="file"
                     accept="image/*"
                     className={`form-control ${errors.TestimonialImage ? "is-invalid" : ""}`}
