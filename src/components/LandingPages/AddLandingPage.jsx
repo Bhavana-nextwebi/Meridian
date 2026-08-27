@@ -217,6 +217,12 @@ export const AddLandingPage = ({
     return payload;
   };
 
+  // Clears the form back to its empty state after a successful "Add".
+  const resetForm = () => {
+    setFormData(initialFormState);
+    setErrors({});
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -229,9 +235,12 @@ export const AddLandingPage = ({
       if (id) {
         await updateLandingPage(payload);
         toast.success("Landing Page updated successfully!");
+        resetForm();
+        navigate("/landing-pages");
       } else {
         await addLandingPage(payload);
         toast.success("Landing Page added successfully!");
+        resetForm();
       }
     } catch (error) {
       handleErrors(error);
