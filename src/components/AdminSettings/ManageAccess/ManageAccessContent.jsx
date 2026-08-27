@@ -23,7 +23,7 @@ export const ManageAccessContent = () => {
     const PageLevelAccessurl = 'Manage-role-access/:roleId/:roleName';
     const navigate = useNavigate();
     const { pageAccessData } = usePageLevelAccess(PageLevelAccessurl);
-    const tableColumns = ['Id', 'Page Group', 'Page Name', 'Page Link', 'View', 'Add', 'Edit', 'Delete', 'Download'];
+    const tableColumns = ['Id', 'Page Group', 'Page Name', 'Page Link', 'View', 'Add', 'Edit', 'Delete', 'Download', 'Show In Menu'];
 
     useEffect(() => {
         if (pageAccessData) {
@@ -134,6 +134,7 @@ export const ManageAccessContent = () => {
                                                         editAccess: item.editAccess,
                                                         deleteAccess: item.deleteAccess,
                                                         downloadAccess: item.downloadAccess,
+                                                        showInMenu: item.showInMenu,
                                                     }}
                                                     columns={['id', 'pagegroup', 'pagename', 'pagelink']}
                                                     hideIcons={true}
@@ -141,7 +142,7 @@ export const ManageAccessContent = () => {
                                                 />
                                             ))
                                         ) : (
-                                            <TableDataStatusError colspan="9" />
+                                            <TableDataStatusError colspan="10" />
                                         )}
                                     </tbody>
                                 </table>

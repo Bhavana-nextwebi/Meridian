@@ -20,7 +20,7 @@ export const DashboardPage = () => {
                     setSectionDisabled(false);
                 } 
                 else {
-                    setSectionDisabled(true);
+                    setSectionDisabled(false);
                     navigate('/dashboard'); 
                 }
             } catch (error) {

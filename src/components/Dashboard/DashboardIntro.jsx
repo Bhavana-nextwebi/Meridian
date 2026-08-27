@@ -14,11 +14,10 @@ export const DashboardIntro = () => {
 
                 if (userData.data.result.userRole === 1) {
                     setUserName(userData.data.result.userName);
-                } else if(userData.data.result.id === 96){
+                } 
+                 else {
                     setUserName(userData.data.result.userName);
-                } else {
-                    setUserName(userData.data.result.userName);
-                    navigate('/user-dashboard'); 
+                    navigate('/dashboard'); 
                 }
             } catch (error) {
                 handleErrors(error);
