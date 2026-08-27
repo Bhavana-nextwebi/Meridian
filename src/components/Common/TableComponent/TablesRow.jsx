@@ -1,8 +1,18 @@
 import React from 'react';
 import { BootstrapTooltip } from '../../../assets/js/script';
 
-
-const TablesRow = ({ rowData, columns, hideIcons, onEdit, onDelete, onAccessChange, showIcons, onClone, pageLevelAccessData }) => {
+const TablesRow = ({
+    rowData,
+    columns,
+    hideIcons,
+    onEdit,
+    onDelete,
+    onAccessChange,
+    showIcons,
+    onClone,
+    pageLevelAccessData,
+    hideEditIcon = false
+}) => {
     const handleCheckboxChange = (field) => {
         const newValue = !rowData[field];
         onAccessChange({ ...rowData, field, value: newValue });
@@ -10,20 +20,35 @@ const TablesRow = ({ rowData, columns, hideIcons, onEdit, onDelete, onAccessChan
 
     const formatTextWithLineBreaks = (text) => {
         if (typeof text !== 'string') return text;
+
         const words = text.split(' ');
-        return words.map((word, index) => ((index + 1) % 10 === 0 ? word + '<br/>' : word)).join(' ');
+
+        return words
+            .map((word, index) =>
+                ((index + 1) % 10 === 0 ? word + '<br/>' : word)
+            )
+            .join(' ');
     };
 
     return (
         <tr className="manage-page-group">
+
             {columns.map((column) => (
                 <td key={column}>
                     {column === 'icon' ? (
-                        <span dangerouslySetInnerHTML={{ __html: rowData.icon }} />
+                        <span
+                            dangerouslySetInnerHTML={{
+                                __html: rowData.icon
+                            }}
+                        />
                     ) : (
                         typeof rowData[column] === 'string' ? (
                             <span
-                                dangerouslySetInnerHTML={{ __html: formatTextWithLineBreaks(rowData[column]) }}
+                                dangerouslySetInnerHTML={{
+                                    __html: formatTextWithLineBreaks(
+                                        rowData[column]
+                                    )
+                                }}
                             />
                         ) : (
                             rowData[column]
@@ -32,6 +57,7 @@ const TablesRow = ({ rowData, columns, hideIcons, onEdit, onDelete, onAccessChan
                 </td>
             ))}
 
+            {/* Access Permission Columns */}
             {hideIcons && (
                 <>
                     <td>
@@ -42,23 +68,28 @@ const TablesRow = ({ rowData, columns, hideIcons, onEdit, onDelete, onAccessChan
                                 role="switch"
                                 id={`viewAccess-${rowData.id}`}
                                 checked={rowData.viewAccess}
-                                onChange={() => handleCheckboxChange('viewAccess')}
+                                onChange={() =>
+                                    handleCheckboxChange('viewAccess')
+                                }
                             />
                         </div>
                     </td>
+
                     <td>
                         <div className="form-check form-switch form-switch-custom form-switch-primary">
-
                             <input
                                 className="form-check-input"
                                 type="checkbox"
                                 role="switch"
                                 id={`addAccess-${rowData.id}`}
                                 checked={rowData.addAccess}
-                                onChange={() => handleCheckboxChange('addAccess')}
+                                onChange={() =>
+                                    handleCheckboxChange('addAccess')
+                                }
                             />
                         </div>
                     </td>
+
                     <td>
                         <div className="form-check form-switch form-switch-custom form-switch-primary">
                             <input
@@ -67,11 +98,13 @@ const TablesRow = ({ rowData, columns, hideIcons, onEdit, onDelete, onAccessChan
                                 role="switch"
                                 id={`editAccess-${rowData.id}`}
                                 checked={rowData.editAccess}
-                                onChange={() => handleCheckboxChange('editAccess')}
+                                onChange={() =>
+                                    handleCheckboxChange('editAccess')
+                                }
                             />
-
                         </div>
                     </td>
+
                     <td>
                         <div className="form-check form-switch form-switch-custom form-switch-primary">
                             <input
@@ -80,10 +113,13 @@ const TablesRow = ({ rowData, columns, hideIcons, onEdit, onDelete, onAccessChan
                                 role="switch"
                                 id={`deleteAccess-${rowData.id}`}
                                 checked={rowData.deleteAccess}
-                                onChange={() => handleCheckboxChange('deleteAccess')}
+                                onChange={() =>
+                                    handleCheckboxChange('deleteAccess')
+                                }
                             />
                         </div>
                     </td>
+
                     <td>
                         <div className="form-check form-switch form-switch-custom form-switch-primary">
                             <input
@@ -92,10 +128,13 @@ const TablesRow = ({ rowData, columns, hideIcons, onEdit, onDelete, onAccessChan
                                 role="switch"
                                 id={`downloadAccess-${rowData.id}`}
                                 checked={rowData.downloadAccess}
-                                onChange={() => handleCheckboxChange('downloadAccess')}
+                                onChange={() =>
+                                    handleCheckboxChange('downloadAccess')
+                                }
                             />
                         </div>
                     </td>
+
                     <td>
                         <div className="form-check form-switch form-switch-custom form-switch-primary">
                             <input
@@ -104,45 +143,76 @@ const TablesRow = ({ rowData, columns, hideIcons, onEdit, onDelete, onAccessChan
                                 role="switch"
                                 id={`showInMenu-${rowData.id}`}
                                 checked={rowData.showInMenu}
-                                onChange={() => handleCheckboxChange('showInMenu')}
+                                onChange={() =>
+                                    handleCheckboxChange('showInMenu')
+                                }
                             />
                         </div>
                     </td>
                 </>
             )}
 
+            {/* Action Icons */}
             {!hideIcons && (
                 <td>
+
+                    {/* Clone */}
                     {showIcons && (
                         <BootstrapTooltip title="Clone">
-                            {pageLevelAccessData.addAccess ? (
-                                <span className="cursor-pointer" data-toggle="tooltip" onClick={() => onClone(rowData.id)}>
+                            {pageLevelAccessData?.addAccess ? (
+                                <span
+                                    className="cursor-pointer"
+                                    data-toggle="tooltip"
+                                    onClick={() =>
+                                        onClone(rowData.id)
+                                    }
+                                >
                                     <i className="ri-file-copy-line"></i>
                                 </span>
-                            ) : ''}
+                            ) : null}
                         </BootstrapTooltip>
                     )}
-                    <BootstrapTooltip title="Edit">
-                        {pageLevelAccessData.editAccess ? (
-                            <span className="cursor-pointer" onClick={onEdit} data-toggle="tooltip">
-                                <i className="ri-pencil-fill"></i>
-                            </span>
-                        ) : ''}
-                    </BootstrapTooltip>
+
+                    {/* Edit */}
+                    {!hideEditIcon && (
+                        <BootstrapTooltip title="Edit">
+                            {pageLevelAccessData?.editAccess ? (
+                                <span
+                                    className="cursor-pointer"
+                                    onClick={onEdit}
+                                    data-toggle="tooltip"
+                                >
+                                    <i className="ri-pencil-fill"></i>
+                                </span>
+                            ) : null}
+                        </BootstrapTooltip>
+                    )}
+
+                    {/* Delete */}
                     <BootstrapTooltip title="Delete">
-                        {pageLevelAccessData.deleteAccess ? (
-                            <span className="cursor-pointer" onClick={onDelete} data-toggle="tooltip">
+                        {pageLevelAccessData?.deleteAccess ? (
+                            <span
+                                className="cursor-pointer"
+                                onClick={onDelete}
+                                data-toggle="tooltip"
+                            >
                                 <i className="ri-delete-bin-6-line"></i>
                             </span>
-                        ) : ''}
+                        ) : null}
                     </BootstrapTooltip>
-                    {!pageLevelAccessData.editAccess && !pageLevelAccessData.deleteAccess ?
-                        (pageLevelAccessData.addAccess ? '' : (
+
+                    {/* Forbidden */}
+                    {!pageLevelAccessData?.editAccess &&
+                        !pageLevelAccessData?.deleteAccess ? (
+                        pageLevelAccessData?.addAccess ? (
+                            ''
+                        ) : (
                             <span style={{ color: '#dc3545' }}>
                                 Forbidden
                             </span>
-                        )) : ''
-                    }
+                        )
+                    ) : null}
+
                 </td>
             )}
         </tr>

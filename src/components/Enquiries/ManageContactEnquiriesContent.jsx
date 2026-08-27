@@ -216,7 +216,8 @@ export const ManageContactEnquiriesContent = () => {
                               // read-only "view full enquiry" action, since
                               // this list has no add/edit form (view + delete
                               // only per the API endpoints provided).
-                              onEdit={() => handleView(item)}
+                              hideEditIcon={true}
+                         
                               onDelete={() => handleDelete(item.id)}
                               pageLevelAccessData={pageAccessDetails}
                             />
