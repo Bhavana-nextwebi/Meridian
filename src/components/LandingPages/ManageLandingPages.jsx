@@ -245,11 +245,11 @@ export const ManageLandingPages = () => {
                           "LP Title",
                           "LP URL",
                           "Banquet Hall Title",
+                          "Banners",
                           "Gallery",
                           "FAQs",
                           "Testimonials",
-                          "Banquet Spaces",
-                          "Banners",
+                          "Banquet Spaces",  
                           "Status",
                           "Published?",
                           "Action",
@@ -265,7 +265,17 @@ export const ManageLandingPages = () => {
                               <td>{item.lpTitle}</td>
                               <td>{item.lpUrl}</td>
                               <td>{item.banquetHallTitle}</td>
-
+                                
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-banners"
+                                  title="Manage Banners"
+                                  onClick={() => navigate(`/landing-pages/${item.lpGuid}/banners`)}
+                                >
+                                  <i className="ri-image-2-line"></i>
+                                </button>
+                              </td>
                               <td className="text-center">
                                 <button
                                   type="button"
@@ -314,16 +324,6 @@ export const ManageLandingPages = () => {
                                 </button>
                               </td>
 
-                              <td className="text-center">
-                                <button
-                                  type="button"
-                                  className="action-icon-btn action-icon-banners"
-                                  title="Manage Banners"
-                                  onClick={() => navigate(`/landing-pages/${item.lpGuid}/banners`)}
-                                >
-                                  <i className="ri-image-2-line"></i>
-                                </button>
-                              </td>
 
                               <td>
                                 <span

@@ -24,6 +24,10 @@ const truncateMessage = (message, maxLength = 60) => {
     : message;
 };
 
+// API returns firstName + lastName separately; combine for display.
+const getFullName = (item) =>
+  [item.firstName, item.lastName].filter(Boolean).join(" ") || "-";
+
 export const ManageLandingPageEnquiriesContent = () => {
   const [pageAccessDetails, setPageAccessDetails] = useState([]);
   const PageLevelAccessurl = "contact-us";
@@ -51,7 +55,8 @@ export const ManageLandingPageEnquiriesContent = () => {
     setLoading(true);
     try {
       const response = await fetchLandingPageEnquiries();
-      setLandingPageEnquiries(response);
+      // API wraps the list in { result, isSuccess, message, responseCode }
+      setLandingPageEnquiries(response?.result || []);
     } catch (error) {
       handleErrors(error);
     } finally {
@@ -66,10 +71,10 @@ export const ManageLandingPageEnquiriesContent = () => {
   const filteredLandingPageEnquiries = landingPageEnquiries.filter((item) => {
     const query = searchQuery.toLowerCase();
     return (
-      item.fullName?.toLowerCase().includes(query) ||
-      item.emailAddress?.toLowerCase().includes(query) ||
+      getFullName(item).toLowerCase().includes(query) ||
+      item.email?.toLowerCase().includes(query) ||
       item.phoneNumber?.toLowerCase().includes(query) ||
-      item.eventType?.toLowerCase().includes(query)
+      item.venueType?.toLowerCase().includes(query)
     );
   });
 
@@ -118,12 +123,12 @@ export const ManageLandingPageEnquiriesContent = () => {
 
   const handleView = (item) => {
     Swal.fire({
-      title: item.fullName || "Landing Page Enquiry",
+      title: getFullName(item),
       html: `
         <div style="text-align:left">
-          <p><strong>Email:</strong> ${item.emailAddress || "-"}</p>
+          <p><strong>Email:</strong> ${item.email || "-"}</p>
           <p><strong>Phone:</strong> ${item.phoneNumber || "-"}</p>
-          <p><strong>Event Type:</strong> ${item.eventType || "-"}</p>
+          <p><strong>Venue Type:</strong> ${item.venueType || "-"}</p>
           <p><strong>Added On:</strong> ${
             item.addedOn ? new Date(item.addedOn).toLocaleString() : "-"
           }</p>
@@ -174,7 +179,7 @@ export const ManageLandingPageEnquiriesContent = () => {
                           "Full Name",
                           "Phone Number",
                           "Email Address",
-                          "Event Type",
+                          "Venue Type",
                           "Message",
                           "Added On",
                           "Status",
@@ -193,10 +198,10 @@ export const ManageLandingPageEnquiriesContent = () => {
                                   (currentPage - 1) * entriesPerPage +
                                   index +
                                   1,
-                                name: item.fullName,
+                                name: getFullName(item),
                                 phone: item.phoneNumber,
-                                email: item.emailAddress,
-                                eventtype: item.eventType,
+                                email: item.email,
+                                eventtype: item.venueType,
                                 message: truncateMessage(item.message),
                                 addedon: item.addedOn
                                   ? new Date(item.addedOn).toLocaleDateString()
