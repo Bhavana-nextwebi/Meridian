@@ -21,6 +21,7 @@ import { Loading } from "../Common/OtherElements/Loading";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 import { useNavigate } from "react-router-dom";
 import { getFullImageUrl } from "../../utils/imageUrl";
+import { getTinyMceInit } from "../../utils/tinymceConfig";
 
 const BLOG_IMAGE_WIDTH = 420;
 const BLOG_IMAGE_HEIGHT = 530;
@@ -256,7 +257,8 @@ export const AddBlogs = ({
           toast.success("Blog updated successfully!");
           setIsButtonDisabled(false);
           resetFormAfterAdd();
-          navigate("/blogs");
+        setTimeout(() => navigate("/blogs"), 2000); 
+
         } else {
           setIsButtonDisabled(true);
           await addBlog(payload);
@@ -419,34 +421,7 @@ export const AddBlogs = ({
                     <Editor
                       tinymceScriptSrc="/tinymce/tinymce.min.js"
                       value={content}
-                      init={{
-                        height: 500,
-                        menubar: false,
-                        plugins: [
-                          "advlist",
-                          "autolink",
-                          "link",
-                          "image",
-                          "lists",
-                          "charmap",
-                          "preview",
-                          "anchor",
-                          "pagebreak",
-                          "searchreplace",
-                          "wordcount",
-                          "visualblocks",
-                          "code",
-                          "fullscreen",
-                          "insertdatetime",
-                          "media",
-                          "table",
-                          "emoticons",
-                          "template",
-                          "help",
-                        ],
-                        toolbar:
-                          "undo redo | styles | bold italic | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | preview media fullscreen | emoticons | help",
-                      }}
+                      init={getTinyMceInit()}
                       onEditorChange={handleEditorChange}
                     />
                     {errors.FullDescription ? (

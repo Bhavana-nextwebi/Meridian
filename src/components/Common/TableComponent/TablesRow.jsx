@@ -134,21 +134,6 @@ const TablesRow = ({
                             />
                         </div>
                     </td>
-
-                    <td>
-                        <div className="form-check form-switch form-switch-custom form-switch-primary">
-                            <input
-                                className="form-check-input"
-                                type="checkbox"
-                                role="switch"
-                                id={`showInMenu-${rowData.id}`}
-                                checked={rowData.showInMenu}
-                                onChange={() =>
-                                    handleCheckboxChange('showInMenu')
-                                }
-                            />
-                        </div>
-                    </td>
                 </>
             )}
 

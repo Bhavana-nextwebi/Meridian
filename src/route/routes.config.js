@@ -43,7 +43,25 @@ import { LandingPagesFaq} from "../pages/LandingPagesFaq";
 import { ContactEnquiry } from "../pages/ContactEnquiry";
 import { LandingPageBanners } from "../pages/LandingPageBanners";
 import { LandingPageEnquiry } from "../pages/LandingPageEnquiry";
- 
+
+// Experience Pages management
+import { ExperiencesManage } from "../pages/ExperiencesManage";
+import { ExperiencesAdd } from "../pages/ExperiencesAdd";
+import { ExperiencesServicePage } from "../pages/ExperiencesServicePage";
+import { ExperienceTestimonialsPage } from "../pages/ExperienceTestimonialsPage";
+import { ExperiencesEventPage } from "../pages/ExperiencesEventPage";
+import { ExperiencesLightPage } from "../pages/ExperiencesLightPage";
+import { ExperiencesWeddingPage } from "../pages/ExperiencesWeddingPage";
+import { ExperienceCategory } from "../pages/ExperienceCategory";
+
+import { VenueCategory } from "../pages/VenueCategory";
+import { VenueSubcategory } from "../pages/VenueSubcategory";
+import { VenuePageAdd } from "../pages/VenuePageAdd";
+import { VenuePageManage } from "../pages/VenuePageManage";
+import { VenueLawnGalleryPage } from "../pages/VenueLawnGalleryPage";
+import { VenueWhyChooseFeaturesPage } from "../pages/VenueWhyChooseFeaturesPage";
+import { VenueFaqPage } from "../pages/VenueFaqPage";
+import { VenueOpenSkyPage } from "../pages/VenueOpenSkyPage";
 
 
 
@@ -114,6 +132,35 @@ const routes = [
   ],
 },
       //--------------------------
+
+      // Experience Pages
+      { path: "experience-pages", element: <ExperiencesManage /> },
+      {
+        path: "experience-pages",
+        children: [
+          { path: "add", element: <ExperiencesAdd /> },
+          { path: "update/:id", element: <ExperiencesAdd /> },
+          { path: ":experienceGuid/services", element: <ExperiencesServicePage /> },
+          { path: ":experienceGuid/testimonials", element: <ExperienceTestimonialsPage /> },
+          { path: ":experienceGuid/events", element: <ExperiencesEventPage /> },
+          { path: ":experienceGuid/light", element: <ExperiencesLightPage /> },
+          { path: ":experienceGuid/wedding", element: <ExperiencesWeddingPage /> },
+        ],
+      },
+    {path:"venue-pages",element:<VenuePageManage/>},
+    {
+      path: "venue-pages",
+      children: [
+        { path: "add", element: <VenuePageAdd /> },
+        { path: "update/:id", element: <VenuePageAdd /> },
+        { path: ":venueGuid/gallery", element: <VenueLawnGalleryPage /> },
+        { path: ":venueGuid/why-choose-us", element: <VenueWhyChooseFeaturesPage /> },
+        { path: ":venueGuid/faqs", element: <VenueFaqPage /> },
+        { path: ":venueGuid/open-sky", element: <VenueOpenSkyPage /> },
+      ],
+    },
+      //--------------------------
+
     {path:"contact-enquiry",element:<ContactEnquiry/>},
     {path:"landing-page-enquiry",element:<LandingPageEnquiry/>},
       { path: "dashboard", element: <DashboardPage /> },
@@ -122,6 +169,9 @@ const routes = [
       { path: "change-password", element: <ChangePassword /> },
       {path:"album-category",element:<AlbumCategory/>},
       {path:"blog-tag",element:<BlogTag/>},
+      {path:"experience-category",element:<ExperienceCategory/>},
+      {path:"venue-category",element:<VenueCategory/>},
+      {path:"venue-sub-category",element:<VenueSubcategory/>},
 
       {path:"albums",element:<AlbumManage/>},
       

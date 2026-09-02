@@ -11,6 +11,7 @@ import { store } from '../src/redux/store/store';
 import '../src/assets/css/common.css'
 import '../src/assets/css/meridian-brand-theme.css'
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import './utils/tinymceConfig.js'
 
 
 

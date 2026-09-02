@@ -18,7 +18,7 @@ export const Navbar = () => {
       try {
         const response = await getMenus();
         const filteredMenus = response.data.result.filter(
-          (menu) => menu.showInMenu
+          (menu) => menu.viewAccess
         );
         setMenus(filteredMenus);
       } catch (error) {
@@ -88,7 +88,7 @@ export const Navbar = () => {
           <ul className="navbar-nav" id="navbar-nav">
             {Object.keys(groupedMenus).map((groupName, index) => {
               const groupItems = groupedMenus[groupName];
-              const visiblePages = groupItems.filter((page) => page.showInMenu);
+              const visiblePages = groupItems;
               const isOpen = openGroup === groupName;
 
               return (
