@@ -8,17 +8,22 @@ import "simplebar-react/dist/simplebar.min.css";
 
 export const Navbar = () => {
   const [menus, setMenus] = useState([]);
-  const [openGroup, setOpenGroup] = useState(null);
   const location = useLocation();
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    const normalized = path.startsWith("/") ? path : `/${path}`;
+    return location.pathname === normalized;
+  };
+
+  const isGroupActive = (pages) =>
+    pages.some((page) => isActive(`/${page.pageLink}`));
 
   useEffect(() => {
     const fetchMenus = async () => {
       try {
         const response = await getMenus();
         const filteredMenus = response.data.result.filter(
-          (menu) => menu.viewAccess
+          (menu) => menu.showInMenu && menu.viewAccess
         );
         setMenus(filteredMenus);
       } catch (error) {
@@ -35,22 +40,6 @@ export const Navbar = () => {
     acc[menu.pageGroupName].push(menu);
     return acc;
   }, {});
-
-  // Auto-open the group that contains the currently active route,
-  // so a refresh/navigation lands with the right group expanded.
-  useEffect(() => {
-    const activeGroup = Object.keys(groupedMenus).find((groupName) =>
-      groupedMenus[groupName].some((page) => isActive(`/${page.pageLink}`))
-    );
-    if (activeGroup) {
-      setOpenGroup(activeGroup);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menus, location.pathname]);
-
-  const toggleGroup = (groupName) => {
-    setOpenGroup((prev) => (prev === groupName ? null : groupName));
-  };
 
   return (
     <div className="app-menu navbar-menu">
@@ -88,26 +77,28 @@ export const Navbar = () => {
           <ul className="navbar-nav" id="navbar-nav">
             {Object.keys(groupedMenus).map((groupName, index) => {
               const groupItems = groupedMenus[groupName];
-              const visiblePages = groupItems;
-              const isOpen = openGroup === groupName;
+              const visiblePages = groupItems.filter(
+                (page) => page.showInMenu && page.viewAccess
+              );
+
+              if (visiblePages.length === 0) return null;
 
               return (
                 <li className="nav-item" key={index}>
                   {visiblePages.length > 1 ? (
                     <>
                       <a
-                        className="nav-link menu-link"
+                        className={`nav-link menu-link${
+                          isGroupActive(visiblePages) ? " active" : ""
+                        }`}
                         href={`#sidebar${groupName.replace(/\s+/g, "")}`}
+                        data-bs-toggle="collapse"
                         role="button"
-                        aria-expanded={isOpen}
+                        aria-expanded={isGroupActive(visiblePages)}
                         aria-controls={`sidebar${groupName.replace(
                           /\s+/g,
                           ""
                         )}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toggleGroup(groupName);
-                        }}
                       >
                         <i
                           dangerouslySetInnerHTML={{
@@ -117,22 +108,19 @@ export const Navbar = () => {
                         <span>{groupName}</span>
                       </a>
                       <div
-                        className={`collapse menu-dropdown ${
-                          isOpen ? "show" : ""
+                        className={`collapse menu-dropdown${
+                          isGroupActive(visiblePages) ? " show" : ""
                         }`}
                         id={`sidebar${groupName.replace(/\s+/g, "")}`}
                       >
                         <ul className="nav nav-sm flex-column">
                           {visiblePages.map((page) => (
-                            <li
-                              className={`nav-item ${
-                                isActive(`/${page.pageLink}`) ? "active" : ""
-                              }`}
-                              key={page.pageId}
-                            >
+                            <li className="nav-item" key={page.pageId}>
                               <Link
                                 to={`/${page.pageLink}`}
-                                className="nav-link"
+                                className={`nav-link${
+                                  isActive(`/${page.pageLink}`) ? " active" : ""
+                                }`}
                                 data-key={page.pageDesc}
                               >
                                 {page.pageName}
@@ -145,7 +133,9 @@ export const Navbar = () => {
                   ) : (
                     <Link
                       to={`/${visiblePages[0].pageLink}`}
-                      className="nav-link menu-link"
+                      className={`nav-link menu-link${
+                        isActive(`/${visiblePages[0].pageLink}`) ? " active" : ""
+                      }`}
                     >
                       <i
                         dangerouslySetInnerHTML={{
