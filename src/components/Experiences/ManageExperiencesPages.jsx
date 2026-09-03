@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   deleteExperiencePage,
@@ -218,10 +216,10 @@ export const ManageExperiencesPages = () => {
                           "Title",
                           "Banner Title",
                           "Services",
-                          "Testimonials",
+                          "Gallery",
                           "Events",
                           "Light",
-                          "Gallery",
+                          "Testimonials",
                           "Action",
                         ]}
                       />
@@ -252,15 +250,13 @@ export const ManageExperiencesPages = () => {
                               <td className="text-center">
                                 <button
                                   type="button"
-                                  className="action-icon-btn action-icon-testimonials"
-                                  title="Manage Testimonials"
+                                  className="action-icon-btn action-icon-wedding"
+                                  title="Manage Gallery Items"
                                   onClick={() =>
-                                    navigate(
-                                      `/experience-pages/${item.experienceGuid}/testimonials`
-                                    )
+                                    navigate(`/experience-pages/${item.experienceGuid}/wedding`)
                                   }
                                 >
-                                  <i className="ri-chat-quote-line"></i>
+                                  <i className="ri-heart-3-line"></i>
                                 </button>
                               </td>
 
@@ -293,13 +289,15 @@ export const ManageExperiencesPages = () => {
                               <td className="text-center">
                                 <button
                                   type="button"
-                                  className="action-icon-btn action-icon-gallery"
-                                  title="Manage Gallery Items"
+                                  className="action-icon-btn action-icon-testimonials"
+                                  title="Manage Testimonials"
                                   onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/wedding`)
+                                    navigate(
+                                      `/experience-pages/${item.experienceGuid}/testimonials`
+                                    )
                                   }
                                 >
-                                  <i className="ri-heart-3-line"></i>
+                                  <i className="ri-chat-quote-line"></i>
                                 </button>
                               </td>
 

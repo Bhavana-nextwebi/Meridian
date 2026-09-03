@@ -10,6 +10,10 @@ import {
   fetchVenueSubcategoryFaqByGuid,
   deleteVenueSubcategoryFaq,
 } from "../../services/venueSubcategoryFaqServices";
+import {
+  fetchVenueSubcategoryPageByGuid,
+  updateVenueSubcategoryPage,
+} from "../../services/venueSubcategoryPageServices";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
 import { Loading } from "../Common/OtherElements/Loading";
@@ -23,6 +27,14 @@ const initialFormState = {
   DisplayOrder: 0,
 };
 
+// FaqDesc lives on the page record itself (venue-subcategory-page), as an
+// intro blurb for the FAQ section - not on the individual FAQ rows. It's
+// edited here, alongside the FAQ list, since that's where the user is
+// already thinking about FAQ content for the page.
+const initialSectionFormState = {
+  FaqDesc: "",
+};
+
 export const ManageVenueSubcategoryFaq = () => {
   const { venueSubcategoryGuid } = useParams();
   const navigate = useNavigate();
@@ -32,6 +44,13 @@ export const ManageVenueSubcategoryFaq = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  // Page-level FaqDesc content.
+  const [pageRecord, setPageRecord] = useState(null);
+  const [sectionFormData, setSectionFormData] = useState(initialSectionFormState);
+  const [sectionErrors, setSectionErrors] = useState({});
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [isSectionSaving, setIsSectionSaving] = useState(false);
 
   const loadFaqs = async () => {
     setLoading(true);
@@ -45,8 +64,26 @@ export const ManageVenueSubcategoryFaq = () => {
     }
   };
 
+  const loadSection = async () => {
+    setSectionLoading(true);
+    try {
+      const data = await fetchVenueSubcategoryPageByGuid(venueSubcategoryGuid);
+      if (data) {
+        setPageRecord(data);
+        setSectionFormData({
+          FaqDesc: data.faqDesc || "",
+        });
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setSectionLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadFaqs();
+    loadSection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venueSubcategoryGuid]);
 
@@ -136,6 +173,73 @@ export const ManageVenueSubcategoryFaq = () => {
     }
   };
 
+  // --- Page-level FaqDesc handlers ---
+
+  const handleSectionInputChange = (e) => {
+    const { name, value } = e.target;
+    setSectionFormData((prevData) => ({ ...prevData, [name]: value }));
+    setSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+  };
+
+  const validateSection = () => {
+    const newErrors = {};
+    let valid = true;
+
+    if (!sectionFormData.FaqDesc?.trim()) {
+      newErrors.FaqDesc = "Description is required";
+      valid = false;
+    }
+
+    setSectionErrors(newErrors);
+    return valid;
+  };
+
+  // The update endpoint expects the whole page record, so every other field
+  // is carried over unchanged from what was last fetched, and only FaqDesc
+  // is overridden. No new image files are sent from this screen, so the
+  // existing Banner/Venue/Setting images are preserved via the KeepExisting
+  // flags rather than being re-uploaded.
+  const handleSectionSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!pageRecord) return;
+    if (!validateSection()) return;
+
+    setIsSectionSaving(true);
+    try {
+      const payload = new FormData();
+      payload.append("Id", pageRecord.id);
+      payload.append("VenueSubcategoryId", pageRecord.venueSubcategoryId);
+      payload.append("BannerTitle", pageRecord.bannerTitle || "");
+      payload.append("VenueTitle", pageRecord.venueTitle || "");
+      payload.append("VenueDescription", pageRecord.venueDescription || "");
+      payload.append("VenueImageTitle", pageRecord.venueImageTitle || "");
+      payload.append("SettingTitle", pageRecord.settingTitle || "");
+      payload.append("SettingDescription", pageRecord.settingDescription || "");
+      payload.append("MomentsTitle", pageRecord.momentsTitle || "");
+      payload.append("MomentsDescription", pageRecord.momentsDescription || "");
+      payload.append("WhyTitle", pageRecord.whyTitle || "");
+      payload.append("WhyDescription", pageRecord.whyDescription || "");
+      payload.append("FaqDesc", sectionFormData.FaqDesc);
+      payload.append("PageTitle", pageRecord.pageTitle || "");
+      payload.append("MetaKey", pageRecord.metaKey || "");
+      payload.append("MetaDesc", pageRecord.metaDesc || "");
+
+      // No images are edited from this screen - keep whatever is already saved.
+      payload.append("KeepExistingBannerImage", true);
+      payload.append("KeepExistingVenueImage", true);
+      payload.append("KeepExistingSettingImage", true);
+
+      await updateVenueSubcategoryPage(payload);
+      toast.success("FAQ section updated successfully!");
+      loadSection();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSectionSaving(false);
+    }
+  };
+
   return (
     <>
       <div className="row">
@@ -161,6 +265,38 @@ export const ManageVenueSubcategoryFaq = () => {
 
       <div className="card-body p-2">
         <div className="card mt-xxl-n5 p-3">
+          <div className="card-header-wrapper p-1">
+            <h5 className="blogs-heading">FAQ Section</h5>
+          </div>
+          {sectionLoading ? (
+            <Loading />
+          ) : (
+            <form onSubmit={handleSectionSubmit} className="mt-3">
+              <div className="mb-3">
+                <label className="form-label">
+                  FAQ Description <span className="required-field">*</span>
+                </label>
+                <textarea
+                  name="FaqDesc"
+                  value={sectionFormData.FaqDesc}
+                  placeholder="Enter FAQ Description"
+                  onChange={handleSectionInputChange}
+                  className={`form-control ${sectionErrors.FaqDesc ? "is-invalid" : ""}`}
+                  rows="3"
+                ></textarea>
+                {sectionErrors.FaqDesc && (
+                  <div className="invalid-feedback">{sectionErrors.FaqDesc}</div>
+                )}
+              </div>
+
+              <button type="submit" className="btn btn-secondary" disabled={isSectionSaving}>
+                {isSectionSaving ? "Saving" : "Save FAQ Section"}
+              </button>
+            </form>
+          )}
+        </div>
+
+        <div className="card mt-3 p-3">
           <div className="card-header-wrapper p-1">
             <h5 className="blogs-heading">{formData.Id ? "Update FAQ" : "Add FAQ"}</h5>
           </div>

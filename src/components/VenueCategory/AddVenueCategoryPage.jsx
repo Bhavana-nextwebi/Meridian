@@ -26,7 +26,10 @@ import { getFullImageUrl } from "../../utils/imageUrl";
 //   - Section4 (title) + Moments   -> Moments page
 //   - FaqDesc                      -> Faq page
 // On add, those fields go up empty and get filled in afterwards from their
-// respective screens.
+// respective screens. On update, we still have to send the whole record
+// (the API replaces it wholesale), so we carry forward whatever was last
+// fetched for the fields this screen doesn't own, and only override the
+// Banner/CTA/SEO fields this form actually edits.
 const initialFormState = {
   VenueCategoryId: "",
   BannerTitle: "",
@@ -35,6 +38,7 @@ const initialFormState = {
   CtaSubTitle: "",
   CtaDesc: "",
   CtaButtonText: "",
+  CtaImage: "",
   PageTitle: "",
   MetaKey: "",
   MetaDesc: "",
@@ -50,6 +54,7 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [venueCategories, setVenueCategories] = useState([]);
   const [venueCategoryGuid, setVenueCategoryGuidState] = useState(null);
+  const [pageRecord, setPageRecord] = useState(null);
   const [PageLevelAccessurl, setPageLevelAccessurl] = useState();
 
   useEffect(() => {
@@ -96,6 +101,7 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
         try {
           const data = await fetchVenueCategoryPageById(id);
           if (data) {
+            setPageRecord(data);
             setFormData({
               VenueCategoryId: data.venueCategoryId ?? "",
               BannerTitle: data.bannerTitle || "",
@@ -105,6 +111,8 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
               CtaSubTitle: data.ctaSubTitle || "",
               CtaDesc: data.ctaDesc || "",
               CtaButtonText: data.ctaButtonText || "",
+              CtaImage: "",
+              CtaImagePreview: getFullImageUrl(data.ctaImage),
               PageTitle: data.pageTitle || "",
               MetaKey: data.metaKey || "",
               MetaDesc: data.metaDesc || "",
@@ -116,6 +124,7 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
         }
       } else {
         setFormData(initialFormState);
+        setPageRecord(null);
         setVenueCategoryGuidState(null);
       }
     };
@@ -158,8 +167,34 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
     return valid;
   };
 
+  // On ADD, only the fields this screen owns are sent — the rest go up
+  // empty and get filled in afterwards from their own manage screens.
+  //
+  // On UPDATE, the API replaces the whole record, so every field owned by
+  // the *other* manage screens (Section1-5, Moments, FaqDesc, etc.) is
+  // carried forward unchanged from pageRecord (the last-fetched record),
+  // and only Banner/CTA/SEO — the fields this form actually edits — are
+  // overridden with the current form values.
   const buildSubmissionPayload = () => {
     const payload = new FormData();
+
+    if (id && pageRecord) {
+      payload.append("Id", id);
+      payload.append("Section1Title", pageRecord.section1Title || "");
+      payload.append("Section1Desc", pageRecord.section1Desc || "");
+      payload.append("Section1Image", pageRecord.section1Image || "");
+      payload.append("Section2Title", pageRecord.section2Title || "");
+      payload.append("Section2Desc", pageRecord.section2Desc || "");
+      payload.append("Section2Image", pageRecord.section2Image || "");
+      payload.append("Section3Title", pageRecord.section3Title || "");
+      payload.append("Section3Desc", pageRecord.section3Desc || "");
+      payload.append("Section3Image", pageRecord.section3Image || "");
+      payload.append("Section4Title", pageRecord.section4Title || "");
+      payload.append("Section5Title", pageRecord.section5Title || "");
+      payload.append("Section5Desc", pageRecord.section5Desc || "");
+      payload.append("FaqDesc", pageRecord.faqDesc || "");
+    }
+
     payload.append("VenueCategoryId", formData.VenueCategoryId);
     payload.append("BannerTitle", formData.BannerTitle);
     payload.append("CtaTitle", formData.CtaTitle);
@@ -170,12 +205,20 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
     payload.append("MetaKey", formData.MetaKey);
     payload.append("MetaDesc", formData.MetaDesc);
 
+    // Images: send the new file if picked, otherwise keep whatever was
+    // already on the record (on update) so it isn't wiped out.
     if (formData.BannerImage) {
       payload.append("BannerImage", formData.BannerImage);
+    } else if (id && pageRecord) {
+      payload.append("BannerImage", pageRecord.bannerImage || "");
     }
-    if (id) {
-      payload.append("Id", id);
+
+    if (formData.CtaImage) {
+      payload.append("CtaImage", formData.CtaImage);
+    } else if (id && pageRecord) {
+      payload.append("CtaImage", pageRecord.ctaImage || "");
     }
+
     return payload;
   };
 
@@ -373,6 +416,39 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
                       onChange={handleInputChange}
                       className="form-control"
                     />
+                  </div>
+
+                  <div className="d-flex flex-column align-items-center mb-3">
+                    <label className="form-label">CTA Image</label>
+                    <div className="profile-user position-relative d-inline-block mx-auto mb-2">
+                      <img
+                        src={formData.CtaImagePreview || allImages.DefultImage}
+                        className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
+                        alt="CTA Preview"
+                      />
+                      <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
+                        <input
+                          id="ctaImage"
+                          type="file"
+                          accept="image/*"
+                          className="profile-img-file-input"
+                          onChange={(e) => handleImageChange(e, "CtaImage")}
+                        />
+                        <label htmlFor="ctaImage" className="profile-photo-edit avatar-xs">
+                          <span className="avatar-title rounded-circle bg-light text-body shadow">
+                            <i className="ri-camera-fill"></i>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                    <small className="text-muted">
+                      Recommended: 16:9, e.g. 1920×1080px, max 3MB
+                    </small>
+                    {errors.CtaImage && (
+                      <div className="invalid-feedback d-block text-center">
+                        {errors.CtaImage}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -521,4 +521,4 @@ export const AddVenueSubcategoryPage = ({ editMode = false, setSelectedPageGroup
       </div>
     </>
   );
-};
+};  

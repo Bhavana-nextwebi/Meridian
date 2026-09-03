@@ -9,6 +9,10 @@ import {
   fetchExperienceServicesByExperienceGuid,
   deleteExperienceService,
 } from "../../services/experienceServiceServices";
+import {
+  fetchExperiencePageByGuid,
+  updateExperiencePage,
+} from "../../services/experiencePageServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
@@ -35,6 +39,15 @@ export const ExperienceServiceDetails = () => {
   const [isSaving, setIsSaving] = useState(false);
   const serviceIconInputRef = useRef(null);
 
+  // SectionNeedsTitle ("Service Needs Title") lives on the main experience
+  // page record, not on individual services, so it's edited here separately
+  // via a full fetch/update of the experience page keyed by experienceGuid.
+  const [experiencePageRecord, setExperiencePageRecord] = useState(null);
+  const [serviceNeedsTitle, setServiceNeedsTitle] = useState("");
+  const [serviceNeedsTitleLoading, setServiceNeedsTitleLoading] = useState(true);
+  const [isSavingServiceNeedsTitle, setIsSavingServiceNeedsTitle] = useState(false);
+  const [serviceNeedsTitleError, setServiceNeedsTitleError] = useState("");
+
   const loadServices = async () => {
     setLoading(true);
     try {
@@ -47,8 +60,24 @@ export const ExperienceServiceDetails = () => {
     }
   };
 
+  const loadServiceNeedsTitle = async () => {
+    setServiceNeedsTitleLoading(true);
+    try {
+      const data = await fetchExperiencePageByGuid(experienceGuid);
+      if (data) {
+        setExperiencePageRecord(data);
+        setServiceNeedsTitle(data.sectionNeedsTitle || "");
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setServiceNeedsTitleLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadServices();
+    loadServiceNeedsTitle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienceGuid]);
 
@@ -167,6 +196,54 @@ export const ExperienceServiceDetails = () => {
     }
   };
 
+  const handleServiceNeedsTitleChange = (e) => {
+    setServiceNeedsTitle(e.target.value);
+    setServiceNeedsTitleError("");
+  };
+
+  // Updates the main experience page record. Since the update endpoint takes
+  // the full payload, everything from the last-fetched record is carried
+  // through unchanged except SectionNeedsTitle; images are only re-sent if
+  // this screen ever lets you change them (it doesn't), so they're omitted.
+  const handleServiceNeedsTitleSubmit = async (e) => {
+    e.preventDefault();
+    if (!experiencePageRecord) return;
+    if (!serviceNeedsTitle?.trim()) {
+      setServiceNeedsTitleError("Service Needs Title is required");
+      return;
+    }
+
+    setIsSavingServiceNeedsTitle(true);
+    try {
+      const record = experiencePageRecord;
+      const payload = new FormData();
+      payload.append("Id", record.id);
+      payload.append("ExperienceCategoryId", record.experienceCategoryId ?? "");
+      payload.append("ExperienceCategoryName", record.experienceCategoryName || "");
+      payload.append("BannerTitle", record.bannerTitle || "");
+      payload.append("Title", record.title || "");
+      payload.append("Description", record.description || "");
+      payload.append("CtaTitle", record.ctaTitle || "");
+      payload.append("CtaDescription", record.ctaDescription || "");
+      payload.append("LightsTitle", record.lightsTitle || "");
+      payload.append("LightsSubTitle", record.lightsSubTitle || "");
+      payload.append("LightsDescription", record.lightsDescription || "");
+      payload.append("SectionNeedsTitle", serviceNeedsTitle);
+      payload.append("WeddingSectionTitle", record.weddingSectionTitle || "");
+      payload.append("PageTitle", record.pageTitle || "");
+      payload.append("MetaKeys", record.metaKeys || "");
+      payload.append("MetaDesc", record.metaDesc || "");
+
+      await updateExperiencePage(payload);
+      toast.success("Service Needs Title updated successfully!");
+      loadServiceNeedsTitle();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSavingServiceNeedsTitle(false);
+    }
+  };
+
   return (
     <>
       <div className="row">
@@ -191,6 +268,40 @@ export const ExperienceServiceDetails = () => {
       </div>
 
       <div className="card mt-xxl-n5 p-3">
+        <div className="card-header-wrapper p-1">
+          <h5 className="blogs-heading">Service Needs Title</h5>
+        </div>
+        {serviceNeedsTitleLoading ? (
+          <Loading />
+        ) : (
+          <form onSubmit={handleServiceNeedsTitleSubmit} className="mt-3">
+            <div className="mb-3">
+              <label className="form-label">
+                Service Needs Title <span className="required-field">*</span>
+              </label>
+              <input
+                type="text"
+                value={serviceNeedsTitle}
+                placeholder="Enter Service Needs Title"
+                onChange={handleServiceNeedsTitleChange}
+                className={`form-control ${serviceNeedsTitleError ? "is-invalid" : ""}`}
+              />
+              {serviceNeedsTitleError && (
+                <div className="invalid-feedback">{serviceNeedsTitleError}</div>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="btn btn-secondary"
+              disabled={isSavingServiceNeedsTitle}
+            >
+              {isSavingServiceNeedsTitle ? "Saving" : "Save Service Needs Title"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className="card mt-3 p-3">
         <div className="card-header-wrapper p-1">
           <h5 className="blogs-heading">
             {editingId ? "Edit Experience Service" : "Add Experience Service"}

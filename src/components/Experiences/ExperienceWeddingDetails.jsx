@@ -9,6 +9,10 @@ import {
   fetchExperienceWeddingsByExperienceGuid,
   deleteExperienceWedding,
 } from "../../services/experienceWeddingServices";
+import {
+  fetchExperiencePageByGuid,
+  updateExperiencePage,
+} from "../../services/experiencePageServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
@@ -34,6 +38,15 @@ export const ExperienceWeddingDetails = () => {
   const [isSaving, setIsSaving] = useState(false);
   const weddingImageInputRef = useRef(null);
 
+  // WeddingSectionTitle ("Gallery Title") lives on the main experience page
+  // record, not on individual wedding items, so it's edited here separately
+  // via a full fetch/update of the experience page keyed by experienceGuid.
+  const [experiencePageRecord, setExperiencePageRecord] = useState(null);
+  const [galleryTitle, setGalleryTitle] = useState("");
+  const [galleryTitleLoading, setGalleryTitleLoading] = useState(true);
+  const [isSavingGalleryTitle, setIsSavingGalleryTitle] = useState(false);
+  const [galleryTitleError, setGalleryTitleError] = useState("");
+
   const loadWeddingItems = async () => {
     setLoading(true);
     try {
@@ -46,8 +59,24 @@ export const ExperienceWeddingDetails = () => {
     }
   };
 
+  const loadGalleryTitle = async () => {
+    setGalleryTitleLoading(true);
+    try {
+      const data = await fetchExperiencePageByGuid(experienceGuid);
+      if (data) {
+        setExperiencePageRecord(data);
+        setGalleryTitle(data.weddingSectionTitle || "");
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setGalleryTitleLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadWeddingItems();
+    loadGalleryTitle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienceGuid]);
 
@@ -160,6 +189,54 @@ export const ExperienceWeddingDetails = () => {
     }
   };
 
+  const handleGalleryTitleChange = (e) => {
+    setGalleryTitle(e.target.value);
+    setGalleryTitleError("");
+  };
+
+  // Updates the main experience page record. Since the update endpoint takes
+  // the full payload, everything from the last-fetched record is carried
+  // through unchanged except WeddingSectionTitle; images are only re-sent if
+  // this screen ever lets you change them (it doesn't), so they're omitted.
+  const handleGalleryTitleSubmit = async (e) => {
+    e.preventDefault();
+    if (!experiencePageRecord) return;
+    if (!galleryTitle?.trim()) {
+      setGalleryTitleError("Gallery Title is required");
+      return;
+    }
+
+    setIsSavingGalleryTitle(true);
+    try {
+      const record = experiencePageRecord;
+      const payload = new FormData();
+      payload.append("Id", record.id);
+      payload.append("ExperienceCategoryId", record.experienceCategoryId ?? "");
+      payload.append("ExperienceCategoryName", record.experienceCategoryName || "");
+      payload.append("BannerTitle", record.bannerTitle || "");
+      payload.append("Title", record.title || "");
+      payload.append("Description", record.description || "");
+      payload.append("CtaTitle", record.ctaTitle || "");
+      payload.append("CtaDescription", record.ctaDescription || "");
+      payload.append("LightsTitle", record.lightsTitle || "");
+      payload.append("LightsSubTitle", record.lightsSubTitle || "");
+      payload.append("LightsDescription", record.lightsDescription || "");
+      payload.append("SectionNeedsTitle", record.sectionNeedsTitle || "");
+      payload.append("WeddingSectionTitle", galleryTitle);
+      payload.append("PageTitle", record.pageTitle || "");
+      payload.append("MetaKeys", record.metaKeys || "");
+      payload.append("MetaDesc", record.metaDesc || "");
+
+      await updateExperiencePage(payload);
+      toast.success("Gallery Title updated successfully!");
+      loadGalleryTitle();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSavingGalleryTitle(false);
+    }
+  };
+
   return (
     <>
       <div className="row">
@@ -184,6 +261,34 @@ export const ExperienceWeddingDetails = () => {
       </div>
 
       <div className="card mt-xxl-n5 p-3">
+        <div className="card-header-wrapper p-1">
+          <h5 className="blogs-heading">Gallery Title</h5>
+        </div>
+        {galleryTitleLoading ? (
+          <Loading />
+        ) : (
+          <form onSubmit={handleGalleryTitleSubmit} className="mt-3">
+            <div className="mb-3">
+              <label className="form-label">
+                Gallery Title <span className="required-field">*</span>
+              </label>
+              <input
+                type="text"
+                value={galleryTitle}
+                placeholder="Enter Gallery Title"
+                onChange={handleGalleryTitleChange}
+                className={`form-control ${galleryTitleError ? "is-invalid" : ""}`}
+              />
+              {galleryTitleError && <div className="invalid-feedback">{galleryTitleError}</div>}
+            </div>
+            <button type="submit" className="btn btn-secondary" disabled={isSavingGalleryTitle}>
+              {isSavingGalleryTitle ? "Saving" : "Save Gallery Title"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className="card mt-3 p-3">
         <div className="card-header-wrapper p-1">
           <h5 className="blogs-heading">
             {editingId ? "Edit Wedding Item" : "Add Wedding Item"}

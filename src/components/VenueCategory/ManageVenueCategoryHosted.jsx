@@ -173,22 +173,18 @@ export const ManageVenueCategoryHosted = () => {
     setSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
-  const validateSection = () => {
-    const newErrors = {};
-    let valid = true;
+const validateSection = () => {
+  const newErrors = {};
+  let valid = true;
 
-    if (!sectionFormData.Section2Title?.trim()) {
-      newErrors.Section2Title = "Title is required";
-      valid = false;
-    }
-    if (!sectionFormData.Section2Desc?.trim()) {
-      newErrors.Section2Desc = "Description is required";
-      valid = false;
-    }
+  if (!sectionFormData.Section2Title?.trim()) {
+    newErrors.Section2Title = "Title is required";
+    valid = false;
+  }
 
-    setSectionErrors(newErrors);
-    return valid;
-  };
+  setSectionErrors(newErrors);
+  return valid;
+};
 
   // The update endpoint expects the whole page record, so the rest of the
   // fields are carried over unchanged from what was last fetched, and only
@@ -205,8 +201,20 @@ export const ManageVenueCategoryHosted = () => {
       payload.append("Id", pageRecord.id);
       payload.append("VenueCategoryId", pageRecord.venueCategoryId);
       payload.append("BannerTitle", pageRecord.bannerTitle || "");
-      payload.append("Section2Title", sectionFormData.Section2Title);
-      payload.append("Section2Desc", sectionFormData.Section2Desc);
+      payload.append("BannerImage", pageRecord.bannerImage || "");
+      payload.append("Section1Title", pageRecord.section1Title || "");
+      payload.append("Section1Desc", pageRecord.section1Desc || "");
+      payload.append("Section1Image", pageRecord.section1Image || "");
+      payload.append("Section2Title", sectionFormData.section2Title || "");
+      payload.append("Section2Desc", sectionFormData.section2Desc || "");
+      payload.append("Section2Image", pageRecord.section2Image || "");
+      payload.append("Section3Title", pageRecord.section3Title || "");
+      payload.append("Section3Desc", pageRecord.section3Desc || "");
+      payload.append("Section3Image", pageRecord.section3Image || "");
+      payload.append("Section4Title", pageRecord.section4Title || "");
+      payload.append("Section5Title", pageRecord.section5Title || "");
+      payload.append("Section5Desc", pageRecord.section5Desc || "");
+      payload.append("FaqDesc",pageRecord.FaqDesc || "");
       payload.append("CtaTitle", pageRecord.ctaTitle || "");
       payload.append("CtaSubTitle", pageRecord.ctaSubTitle || "");
       payload.append("CtaDesc", pageRecord.ctaDesc || "");
@@ -214,6 +222,7 @@ export const ManageVenueCategoryHosted = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKey", pageRecord.metaKey || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
+      
 
       await updateVenueCategoryPage(payload);
       toast.success("Hosted section updated successfully!");
@@ -273,7 +282,7 @@ export const ManageVenueCategoryHosted = () => {
                   <div className="invalid-feedback">{sectionErrors.Section2Title}</div>
                 )}
               </div>
-              <div className="mb-3">
+              {/* <div className="mb-3">
                 <label className="form-label">
                   Section 2 Description <span className="required-field">*</span>
                 </label>
@@ -288,7 +297,7 @@ export const ManageVenueCategoryHosted = () => {
                 {sectionErrors.Section2Desc && (
                   <div className="invalid-feedback">{sectionErrors.Section2Desc}</div>
                 )}
-              </div>
+              </div> */}
 
               <button type="submit" className="btn btn-secondary" disabled={isSectionSaving}>
                 {isSectionSaving ? "Saving" : "Save Hosted Section"}

@@ -214,8 +214,20 @@ export const ManageVenueCategoryWhyThisVenue = () => {
       payload.append("Id", pageRecord.id);
       payload.append("VenueCategoryId", pageRecord.venueCategoryId);
       payload.append("BannerTitle", pageRecord.bannerTitle || "");
+      payload.append("BannerImage", pageRecord.bannerImage || "");
+      payload.append("Section1Title", pageRecord.section1Title || "");
+      payload.append("Section1Desc", pageRecord.section1Desc || "");
+      payload.append("Section1Image", pageRecord.section1Image || "");
+      payload.append("Section2Title", pageRecord.section2Title || "");
+      payload.append("Section2Desc", pageRecord.section2Desc || "");
+      payload.append("Section2Image", pageRecord.section2Image || "");
+      payload.append("Section3Title", sectionFormData.Section3Title);
+      payload.append("Section3Desc", sectionFormData.Section3Desc);
+      payload.append("Section3Image", pageRecord.section3Image || "");
+      payload.append("Section4Title", pageRecord.section4Title || "");
       payload.append("Section5Title", sectionFormData.Section5Title);
       payload.append("Section5Desc", sectionFormData.Section5Desc);
+      payload.append("FaqDesc", pageRecord.faqDesc || "");
       payload.append("CtaTitle", pageRecord.ctaTitle || "");
       payload.append("CtaSubTitle", pageRecord.ctaSubTitle || "");
       payload.append("CtaDesc", pageRecord.ctaDesc || "");
@@ -223,7 +235,6 @@ export const ManageVenueCategoryWhyThisVenue = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKey", pageRecord.metaKey || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
-
       await updateVenueCategoryPage(payload);
       toast.success("Why Choose section updated successfully!");
       loadSection();

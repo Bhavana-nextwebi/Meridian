@@ -203,10 +203,23 @@ export const ManageVenueCategoryFaq = () => {
     setIsFaqSectionSaving(true);
     try {
       const payload = new FormData();
-      payload.append("Id", pageRecord.id);
+     payload.append("Id", pageRecord.id);
       payload.append("VenueCategoryId", pageRecord.venueCategoryId);
       payload.append("BannerTitle", pageRecord.bannerTitle || "");
-      payload.append("FaqDesc", faqSectionFormData.FaqDesc);
+      payload.append("BannerImage", pageRecord.bannerImage || "");
+      payload.append("Section1Title", pageRecord.section1Title || "");
+      payload.append("Section1Desc", pageRecord.section1Desc || "");
+      payload.append("Section1Image", pageRecord.section1Image || "");
+      payload.append("Section2Title", pageRecord.section2Title || "");
+      payload.append("Section2Desc", pageRecord.section2Desc || "");
+      payload.append("Section2Image", pageRecord.section2Image || "");
+      payload.append("Section3Title", pageRecord.section3Title || "");
+      payload.append("Section3Desc", pageRecord.section3Desc || "");
+      payload.append("Section3Image", pageRecord.section3Image || "");
+      payload.append("Section4Title", pageRecord.section4Title || "");
+      payload.append("Section5Title", pageRecord.section5Title || "");
+      payload.append("Section5Desc", pageRecord.section5Desc || "");
+      payload.append("FaqDesc", faqSectionFormData.FaqDesc || "");
       payload.append("CtaTitle", pageRecord.ctaTitle || "");
       payload.append("CtaSubTitle", pageRecord.ctaSubTitle || "");
       payload.append("CtaDesc", pageRecord.ctaDesc || "");

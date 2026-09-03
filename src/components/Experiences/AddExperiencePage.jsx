@@ -16,12 +16,15 @@ import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 import { getFullImageUrl } from "../../utils/imageUrl";
 import { getTinyMceInit } from "../../utils/tinymceConfig";
 
-// CtaTitle/CtaDescription and LightsTitle/LightsSubTitle/LightsDescription
+// CtaTitle/CtaDescription, LightsTitle/LightsSubTitle/LightsDescription,
+// WeddingSectionTitle (edited as "Gallery Title" on the Wedding screen), and
+// SectionNeedsTitle (edited as "Service Needs Title" on the Services screen)
 // are still part of formData (and still sent on submit) but are no longer
-// editable from this form - they're managed from the Events and Light
-// screens instead, keyed by the page's own experienceGuid. On create there's
-// nothing fetched yet so they naturally go up empty; on update the values
-// fetched below are carried through unchanged since nothing here touches them.
+// editable from this form - they're managed from the Events, Light, Wedding,
+// and Services screens instead, keyed by the page's own experienceGuid. On
+// create there's nothing fetched yet so they naturally go up empty; on
+// update the values fetched below are carried through unchanged since
+// nothing here touches them.
 const initialFormState = {
   ExperienceCategoryId: "",
   ExperienceCategoryName: "",
@@ -35,6 +38,8 @@ const initialFormState = {
   LightsTitle: "",
   LightsSubTitle: "",
   LightsDescription: "",
+  SectionNeedsTitle: "",
+  WeddingSectionTitle: "",
   PageTitle: "",
   MetaKeys: "",
   MetaDesc: "",
@@ -121,6 +126,8 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
               LightsTitle: data.lightsTitle || "",
               LightsSubTitle: data.lightsSubTitle || "",
               LightsDescription: data.lightsDescription || "",
+              SectionNeedsTitle: data.sectionNeedsTitle || "",
+              WeddingSectionTitle: data.weddingSectionTitle || "",
               PageTitle: data.pageTitle || "",
               MetaKeys: data.metaKeys || "",
               MetaDesc: data.metaDesc || "",
@@ -214,12 +221,14 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
     payload.append("Title", formData.Title);
     payload.append("Description", formData.Description);
     // Passed through as-is: empty on create, whatever was last saved (via
-    // the Events/Light screens) on update.
+    // the Events/Light/Wedding/Services screens) on update.
     payload.append("CtaTitle", formData.CtaTitle);
     payload.append("CtaDescription", formData.CtaDescription);
     payload.append("LightsTitle", formData.LightsTitle);
     payload.append("LightsSubTitle", formData.LightsSubTitle);
     payload.append("LightsDescription", formData.LightsDescription);
+    payload.append("SectionNeedsTitle", formData.SectionNeedsTitle);
+    payload.append("WeddingSectionTitle", formData.WeddingSectionTitle);
     payload.append("PageTitle", formData.PageTitle);
     payload.append("MetaKeys", formData.MetaKeys);
     payload.append("MetaDesc", formData.MetaDesc);
@@ -460,8 +469,10 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                   </div>
                   <div className="mt-3">
                     <p className="text-muted mb-3">
-                      Call To Action content is managed from the Events screen, and Lights
-                      section content is managed from the Light screen for this page.
+                      Call To Action content is managed from the Events screen, Lights
+                      section content is managed from the Light screen, Gallery Title is
+                      managed from the Wedding screen, and Service Needs Title is managed
+                      from the Services screen for this page.
                     </p>
                     {experienceGuid ? (
                       <div className="d-flex flex-wrap gap-2">

@@ -247,12 +247,12 @@ export const ManageVenueSubcategoryPages = () => {
                           "Venue Subcategory",
                           "Venue Title",
                           "Banner Title",
-                          "Capacity",
-                          "Celebration Features",
-                          "FAQs",
                           "Intro Features",
+                          "Celebration Features",
                           "Moments",
                           "Why Choose",
+                          "Capacity",
+                          "FAQs",
                           "Action",
                         ]}
                       />
@@ -272,13 +272,15 @@ export const ManageVenueSubcategoryPages = () => {
                                 <td className="text-center">
                                   <button
                                     type="button"
-                                    className="action-icon-btn action-icon-capacity"
-                                    title="Manage Capacity"
+                                    className="action-icon-btn action-icon-intro"
+                                    title="Manage Intro Features"
                                     onClick={() =>
-                                      navigate(`/venue-subcategory-pages/${item.venueSubcategoryGuid}/capacity`)
+                                      navigate(
+                                        `/venue-subcategory-pages/${item.venueSubcategoryGuid}/intro-features`
+                                      )
                                     }
                                   >
-                                    <i className="ri-group-line"></i>
+                                    <i className="ri-star-line"></i>
                                   </button>
                                 </td>
 
@@ -300,41 +302,13 @@ export const ManageVenueSubcategoryPages = () => {
                                 <td className="text-center">
                                   <button
                                     type="button"
-                                    className="action-icon-btn action-icon-faq"
-                                    title="Manage FAQs"
-                                    onClick={() =>
-                                      navigate(`/venue-subcategory-pages/${item.venueSubcategoryGuid}/faqs`)
-                                    }
-                                  >
-                                    <i className="ri-question-answer-line"></i>
-                                  </button>
-                                </td>
-
-                                <td className="text-center">
-                                  <button
-                                    type="button"
-                                    className="action-icon-btn action-icon-intro"
-                                    title="Manage Intro Features"
-                                    onClick={() =>
-                                      navigate(
-                                        `/venue-subcategory-pages/${item.venueSubcategoryGuid}/intro-features`
-                                      )
-                                    }
-                                  >
-                                    <i className="ri-star-line"></i>
-                                  </button>
-                                </td>
-
-                                <td className="text-center">
-                                  <button
-                                    type="button"
                                     className="action-icon-btn action-icon-moments"
                                     title="Manage Moments"
                                     onClick={() =>
                                       navigate(`/venue-subcategory-pages/${item.venueSubcategoryGuid}/moments`)
                                     }
                                   >
-                                    <i className="ri-image-2-line"></i>
+                                    <i className="ri-camera-line"></i>
                                   </button>
                                 </td>
 
@@ -348,6 +322,32 @@ export const ManageVenueSubcategoryPages = () => {
                                     }
                                   >
                                     <i className="ri-thumb-up-line"></i>
+                                  </button>
+                                </td>
+
+                                <td className="text-center">
+                                  <button
+                                    type="button"
+                                    className="action-icon-btn action-icon-capacity"
+                                    title="Manage Capacity"
+                                    onClick={() =>
+                                      navigate(`/venue-subcategory-pages/${item.venueSubcategoryGuid}/capacity`)
+                                    }
+                                  >
+                                    <i className="ri-group-line"></i>
+                                  </button>
+                                </td>
+
+                                <td className="text-center">
+                                  <button
+                                    type="button"
+                                    className="action-icon-btn action-icon-faq"
+                                    title="Manage FAQs"
+                                    onClick={() =>
+                                      navigate(`/venue-subcategory-pages/${item.venueSubcategoryGuid}/faqs`)
+                                    }
+                                  >
+                                    <i className="ri-question-answer-line"></i>
                                   </button>
                                 </td>
 

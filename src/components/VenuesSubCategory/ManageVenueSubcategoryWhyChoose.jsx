@@ -10,6 +10,10 @@ import {
   fetchVenueSubcategoryWhyChooseByGuid,
   deleteVenueSubcategoryWhyChoose,
 } from "../../services/venueSubcategoryWhyChooseServices";
+import {
+  fetchVenueSubcategoryPageByGuid,
+  updateVenueSubcategoryPage,
+} from "../../services/venueSubcategoryPageServices";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
 import { Loading } from "../Common/OtherElements/Loading";
@@ -23,6 +27,15 @@ const initialWhyChooseFormState = {
   DisplayOrder: 0,
 };
 
+// WhyTitle / WhyDescription live on the page record itself (venue-subcategory-page),
+// not on the individual why-choose feature rows. They're edited here, alongside
+// the Why Choose feature list, since that's where the user is already thinking
+// about "why choose this venue" content.
+const initialSectionFormState = {
+  WhyTitle: "",
+  WhyDescription: "",
+};
+
 export const ManageVenueSubcategoryWhyChoose = () => {
   const { venueSubcategoryGuid } = useParams();
   const navigate = useNavigate();
@@ -32,6 +45,13 @@ export const ManageVenueSubcategoryWhyChoose = () => {
   const [formData, setFormData] = useState(initialWhyChooseFormState);
   const [errors, setErrors] = useState({});
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  // Page-level WhyTitle / WhyDescription content.
+  const [pageRecord, setPageRecord] = useState(null);
+  const [sectionFormData, setSectionFormData] = useState(initialSectionFormState);
+  const [sectionErrors, setSectionErrors] = useState({});
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [isSectionSaving, setIsSectionSaving] = useState(false);
 
   const loadWhyChoose = async () => {
     setLoading(true);
@@ -45,8 +65,27 @@ export const ManageVenueSubcategoryWhyChoose = () => {
     }
   };
 
+  const loadSection = async () => {
+    setSectionLoading(true);
+    try {
+      const data = await fetchVenueSubcategoryPageByGuid(venueSubcategoryGuid);
+      if (data) {
+        setPageRecord(data);
+        setSectionFormData({
+          WhyTitle: data.whyTitle || "",
+          WhyDescription: data.whyDescription || "",
+        });
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setSectionLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadWhyChoose();
+    loadSection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venueSubcategoryGuid]);
 
@@ -135,6 +174,77 @@ export const ManageVenueSubcategoryWhyChoose = () => {
     }
   };
 
+  // --- Page-level WhyTitle / WhyDescription handlers ---
+
+  const handleSectionInputChange = (e) => {
+    const { name, value } = e.target;
+    setSectionFormData((prevData) => ({ ...prevData, [name]: value }));
+    setSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+  };
+
+  const validateSection = () => {
+    const newErrors = {};
+    let valid = true;
+
+    if (!sectionFormData.WhyTitle?.trim()) {
+      newErrors.WhyTitle = "Title is required";
+      valid = false;
+    }
+    if (!sectionFormData.WhyDescription?.trim()) {
+      newErrors.WhyDescription = "Description is required";
+      valid = false;
+    }
+
+    setSectionErrors(newErrors);
+    return valid;
+  };
+
+  // The update endpoint expects the whole page record, so every other field
+  // is carried over unchanged from what was last fetched, and only WhyTitle /
+  // WhyDescription are overridden. No new image files are sent from this
+  // screen, so the existing Banner/Venue/Setting images are preserved via the
+  // KeepExisting flags rather than being re-uploaded.
+  const handleSectionSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!pageRecord) return;
+    if (!validateSection()) return;
+
+    setIsSectionSaving(true);
+    try {
+      const payload = new FormData();
+      payload.append("Id", pageRecord.id);
+      payload.append("VenueSubcategoryId", pageRecord.venueSubcategoryId);
+      payload.append("BannerTitle", pageRecord.bannerTitle || "");
+      payload.append("VenueTitle", pageRecord.venueTitle || "");
+      payload.append("VenueDescription", pageRecord.venueDescription || "");
+      payload.append("VenueImageTitle", pageRecord.venueImageTitle || "");
+      payload.append("SettingTitle", pageRecord.settingTitle || "");
+      payload.append("SettingDescription", pageRecord.settingDescription || "");
+      payload.append("MomentsTitle", pageRecord.momentsTitle || "");
+      payload.append("MomentsDescription", pageRecord.momentsDescription || "");
+      payload.append("WhyTitle", sectionFormData.WhyTitle);
+      payload.append("WhyDescription", sectionFormData.WhyDescription);
+      payload.append("FaqDesc", pageRecord.faqDesc || "");
+      payload.append("PageTitle", pageRecord.pageTitle || "");
+      payload.append("MetaKey", pageRecord.metaKey || "");
+      payload.append("MetaDesc", pageRecord.metaDesc || "");
+
+      // No images are edited from this screen - keep whatever is already saved.
+      payload.append("KeepExistingBannerImage", true);
+      payload.append("KeepExistingVenueImage", true);
+      payload.append("KeepExistingSettingImage", true);
+
+      await updateVenueSubcategoryPage(payload);
+      toast.success("Why Choose section updated successfully!");
+      loadSection();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSectionSaving(false);
+    }
+  };
+
   return (
     <>
       <div className="row">
@@ -160,6 +270,54 @@ export const ManageVenueSubcategoryWhyChoose = () => {
 
       <div className="card-body p-2">
         <div className="card mt-xxl-n5 p-3">
+          <div className="card-header-wrapper p-1">
+            <h5 className="blogs-heading">Why Choose Section</h5>
+          </div>
+          {sectionLoading ? (
+            <Loading />
+          ) : (
+            <form onSubmit={handleSectionSubmit} className="mt-3">
+              <div className="mb-3">
+                <label className="form-label">
+                  Why Title <span className="required-field">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="WhyTitle"
+                  value={sectionFormData.WhyTitle}
+                  placeholder="Enter Why Title"
+                  onChange={handleSectionInputChange}
+                  className={`form-control ${sectionErrors.WhyTitle ? "is-invalid" : ""}`}
+                />
+                {sectionErrors.WhyTitle && (
+                  <div className="invalid-feedback">{sectionErrors.WhyTitle}</div>
+                )}
+              </div>
+              <div className="mb-3">
+                <label className="form-label">
+                  Why Description <span className="required-field">*</span>
+                </label>
+                <textarea
+                  name="WhyDescription"
+                  value={sectionFormData.WhyDescription}
+                  placeholder="Enter Why Description"
+                  onChange={handleSectionInputChange}
+                  className={`form-control ${sectionErrors.WhyDescription ? "is-invalid" : ""}`}
+                  rows="3"
+                ></textarea>
+                {sectionErrors.WhyDescription && (
+                  <div className="invalid-feedback">{sectionErrors.WhyDescription}</div>
+                )}
+              </div>
+
+              <button type="submit" className="btn btn-secondary" disabled={isSectionSaving}>
+                {isSectionSaving ? "Saving" : "Save Why Choose Section"}
+              </button>
+            </form>
+          )}
+        </div>
+
+        <div className="card mt-3 p-3">
           <div className="card-header-wrapper p-1">
             <h5 className="blogs-heading">
               {formData.Id ? "Update Why Choose Feature" : "Add Why Choose Feature"}
