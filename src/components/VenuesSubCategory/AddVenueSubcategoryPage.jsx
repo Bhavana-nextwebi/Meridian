@@ -3,50 +3,35 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
-import { Editor } from "@tinymce/tinymce-react";
 import {
-  fetchVenuePageById,
-  addVenuePage,
-  updateVenuePage,
-} from "../../services/venuePageServices";
+  fetchVenueSubcategoryPageById,
+  addVenueSubcategoryPage,
+  updateVenueSubcategoryPage,
+} from "../../services/venueSubcategoryPageServices";
 import { fetchVenueCategories } from "../../services/venueCategoryServices";
 import { fetchVenueSubcategories } from "../../services/venueSubcategoryServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 import { getFullImageUrl } from "../../utils/imageUrl";
-import { getTinyMceInit } from "../../utils/tinymceConfig";
 
+// Venue/Setting/Moments section content (title, description, image), along
+// with Why Choose features, are intentionally NOT collected here anymore -
+// they're edited later, per page, from the Intro Features / Celebration
+// Features / Moments / Why Choose manage screens (keyed by the page's
+// venueSubcategoryGuid, which only exists once this record has been saved
+// once). On add, those fields go up empty and get filled in afterwards.
 const initialFormState = {
   VenueCategoryId: "",
-  VenueCategoryName: "",
   VenueSubcategoryId: "",
-  VenueSubcategoryName: "",
   BannerTitle: "",
   BannerImage: "",
-  VenueTitle: "",
-  VenueDescription: "",
-  VenueImage: "",
-  ExploreCtaTitle: "",
-  ExploreCtaDescription: "",
-  WhyChooseTitle: "",
-  WhyChooseDescription: "",
-  WhyChooseImage: "",
   PageTitle: "",
   MetaKey: "",
   MetaDesc: "",
 };
 
-// TinyMCE's "empty" state is still markup like "<p><br></p>", not "" - a
-// plain .trim() check on the HTML would treat that as non-empty, so strip
-// tags first when deciding whether VenueDescription was actually filled in.
-const isRichTextEmpty = (html) => {
-  if (!html) return true;
-  const stripped = html.replace(/<[^>]*>/g, "").trim();
-  return stripped.length === 0;
-};
-
-export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMode }) => {
+export const AddVenueSubcategoryPage = ({ editMode = false, setSelectedPageGroup, setEditMode }) => {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -56,13 +41,14 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [venueCategories, setVenueCategories] = useState([]);
   const [allVenueSubcategories, setAllVenueSubcategories] = useState([]);
+  const [venueSubcategoryGuid, setVenueSubcategoryGuidState] = useState(null);
   const [PageLevelAccessurl, setPageLevelAccessurl] = useState();
 
   useEffect(() => {
     if (id) {
-      setPageLevelAccessurl("/venue-pages/update/:id");
+      setPageLevelAccessurl("/venue-subcategory-pages/update/:id");
     } else {
-      setPageLevelAccessurl("venue-pages/add");
+      setPageLevelAccessurl("venue-subcategory-pages/add");
     }
   }, [id]);
 
@@ -121,85 +107,57 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
     const fetchData = async () => {
       if (id) {
         try {
-          const data = await fetchVenuePageById(id);
+          const data = await fetchVenueSubcategoryPageById(id);
           if (data) {
+            // The record only stores VenueSubcategoryId, so back-fill the
+            // parent VenueCategoryId once subcategories are loaded so the
+            // category dropdown pre-selects correctly.
+            const matchingSubcategory = allVenueSubcategories.find(
+              (subcategory) => String(subcategory.id) === String(data.venueSubcategoryId)
+            );
             setFormData({
-              VenueCategoryId: data.venueCategoryId ?? "",
-              VenueCategoryName: data.venueCategoryName || "",
+              VenueCategoryId: matchingSubcategory ? matchingSubcategory.venueCategoryId : "",
               VenueSubcategoryId: data.venueSubcategoryId ?? "",
-              VenueSubcategoryName: data.venueSubcategoryName || "",
               BannerTitle: data.bannerTitle || "",
               BannerImage: "",
               BannerImagePreview: getFullImageUrl(data.bannerImage),
-              VenueTitle: data.venueTitle || "",
-              VenueDescription: data.venueDescription || "",
-              VenueImage: "",
-              VenueImagePreview: getFullImageUrl(data.venueImage),
-              ExploreCtaTitle: data.exploreCtaTitle || "",
-              ExploreCtaDescription: data.exploreCtaDescription || "",
-              WhyChooseTitle: data.whyChooseTitle || "",
-              WhyChooseDescription: data.whyChooseDescription || "",
-              WhyChooseImage: "",
-              WhyChooseImagePreview: getFullImageUrl(data.whyChooseImage),
               PageTitle: data.pageTitle || "",
               MetaKey: data.metaKey || "",
               MetaDesc: data.metaDesc || "",
             });
+            setVenueSubcategoryGuidState(data.venueSubcategoryGuid || null);
           }
         } catch (error) {
           handleErrors(error);
         }
       } else {
         setFormData(initialFormState);
+        setVenueSubcategoryGuidState(null);
       }
     };
 
-    fetchData();
+    // Wait until subcategories are loaded so the category back-fill above works.
+    if (allVenueSubcategories.length > 0 || !id) {
+      fetchData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, allVenueSubcategories]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "VenueCategoryId") {
-      // Keep VenueCategoryName in sync with the selected category, and clear
-      // the subcategory since it belongs to the previous category.
-      const selectedCategory = venueCategories.find(
-        (category) => String(category.id) === String(value)
-      );
+      // Changing the category invalidates the previously selected subcategory.
       setFormData((prevData) => ({
         ...prevData,
         VenueCategoryId: value,
-        VenueCategoryName: selectedCategory ? selectedCategory.venueCategoryName : "",
         VenueSubcategoryId: "",
-        VenueSubcategoryName: "",
-      }));
-    } else if (name === "VenueSubcategoryId") {
-      // Keep VenueSubcategoryName in sync with the selected subcategory so the
-      // API always receives both the id and a matching denormalized name.
-      const selectedSubcategory = venueSubcategories.find(
-        (subcategory) => String(subcategory.id) === String(value)
-      );
-      setFormData((prevData) => ({
-        ...prevData,
-        VenueSubcategoryId: value,
-        VenueSubcategoryName: selectedSubcategory
-          ? selectedSubcategory.venueSubcategoryName
-          : "",
       }));
     } else {
       setFormData((prevData) => ({ ...prevData, [name]: value }));
     }
 
     setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
-  };
-
-  // TinyMCE's onEditorChange hands back the HTML string directly (not an
-  // input event), so VenueDescription gets its own handler rather than going
-  // through handleInputChange.
-  const handleDescriptionChange = (content) => {
-    setFormData((prevData) => ({ ...prevData, VenueDescription: content }));
-    setErrors((prevErrors) => ({ ...prevErrors, VenueDescription: "" }));
   };
 
   const handleImageChange = (e, imageField) => {
@@ -230,14 +188,6 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
       newErrors.BannerTitle = "Banner Title is required";
       valid = false;
     }
-    if (!formData.VenueTitle?.trim()) {
-      newErrors.VenueTitle = "Venue Title is required";
-      valid = false;
-    }
-    if (isRichTextEmpty(formData.VenueDescription)) {
-      newErrors.VenueDescription = "Venue Description is required";
-      valid = false;
-    }
 
     setErrors(newErrors);
     return valid;
@@ -245,29 +195,25 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
 
   const buildSubmissionPayload = () => {
     const payload = new FormData();
-    payload.append("VenueCategoryId", formData.VenueCategoryId);
-    payload.append("VenueCategoryName", formData.VenueCategoryName);
     payload.append("VenueSubcategoryId", formData.VenueSubcategoryId);
-    payload.append("VenueSubcategoryName", formData.VenueSubcategoryName);
     payload.append("BannerTitle", formData.BannerTitle);
-    payload.append("VenueTitle", formData.VenueTitle);
-    payload.append("VenueDescription", formData.VenueDescription);
-    payload.append("ExploreCtaTitle", formData.ExploreCtaTitle);
-    payload.append("ExploreCtaDescription", formData.ExploreCtaDescription);
-    payload.append("WhyChooseTitle", formData.WhyChooseTitle);
-    payload.append("WhyChooseDescription", formData.WhyChooseDescription);
     payload.append("PageTitle", formData.PageTitle);
     payload.append("MetaKey", formData.MetaKey);
     payload.append("MetaDesc", formData.MetaDesc);
 
+    // Venue / Setting / Moments section content is managed later from the
+    // Intro Features / Celebration Features / Moments screens - send it up
+    // empty here so it doesn't overwrite anything already saved there on update.
+    payload.append("VenueTitle", "");
+    payload.append("VenueDescription", "");
+    payload.append("VenueImageTitle", "");
+    payload.append("SettingTitle", "");
+    payload.append("SettingDescription", "");
+    payload.append("MomentsTitle", "");
+    payload.append("MomentsDescription", "");
+
     if (formData.BannerImage) {
       payload.append("BannerImage", formData.BannerImage);
-    }
-    if (formData.VenueImage) {
-      payload.append("VenueImage", formData.VenueImage);
-    }
-    if (formData.WhyChooseImage) {
-      payload.append("WhyChooseImage", formData.WhyChooseImage);
     }
     if (id) {
       payload.append("Id", id);
@@ -290,13 +236,15 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
     try {
       const payload = buildSubmissionPayload();
       if (id) {
-        await updateVenuePage(payload);
-        toast.success("Venue Page updated successfully!");
+        await updateVenueSubcategoryPage(payload);
+        toast.success("Venue Subcategory Page updated successfully!");
         resetForm();
-        navigate("/venue-pages");
+        navigate("/venue-subcategory-pages");
       } else {
-        await addVenuePage(payload);
-        toast.success("Venue Page added successfully!");
+        await addVenueSubcategoryPage(payload);
+        toast.success(
+          "Venue Subcategory Page added! Add Venue, Setting, Moments and Why Choose content from the manage screens next."
+        );
         resetForm();
       }
     } catch (error) {
@@ -319,7 +267,7 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
       <div className="row">
         <div className="col-12">
           <div className="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 className="mb-sm-0">{id ? "Venue Page Details" : "Add Venue Page"}</h4>
+            <h4 className="mb-sm-0">{id ? "Venue Subcategory Page Details" : "Add Venue Subcategory Page"}</h4>
             <div className="page-title-right">
               <ol className="breadcrumb m-0">
                 <li className="breadcrumb-item">
@@ -328,7 +276,7 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
                   </Link>
                 </li>
                 <li className="breadcrumb-item">
-                  <Link to="/venue-pages">Manage Venue Pages</Link>
+                  <Link to="/venue-subcategory-pages">Manage Venue Subcategory Pages</Link>
                 </li>
                 <li className="breadcrumb-item">{id ? `Update-${id}` : "Add"}</li>
               </ol>
@@ -343,7 +291,7 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
             <div className="col-lg-8">
               <div className="card mt-xxl-n5 p-3">
                 <div className="card-header-wrapper p-1">
-                  <h5 className="blogs-heading">Venue Page Details</h5>
+                  <h5 className="blogs-heading">Venue Subcategory Page Details</h5>
                 </div>
                 <div className="mt-3">
                   <div className="row">
@@ -443,170 +391,65 @@ export const AddVenuePage = ({ editMode = false, setSelectedPageGroup, setEditMo
                 </div>
               </div>
 
-              <div className="card mt-3 p-3">
-                <div className="card-header-wrapper p-1">
-                  <h5 className="blogs-heading">Introduction Content</h5>
-                </div>
-                <div className="mt-3">
-                  <div className="mb-3">
-                    <label className="form-label">
-                      Intro Title <span className="required-field">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="VenueTitle"
-                      value={formData.VenueTitle}
-                      placeholder="Enter Venue Title"
-                      onChange={handleInputChange}
-                      className={`form-control ${errors.VenueTitle ? "is-invalid" : ""}`}
-                    />
-                    {errors.VenueTitle && (
-                      <div className="invalid-feedback">{errors.VenueTitle}</div>
-                    )}
+              {id && (
+                <div className="card mt-3 p-3">
+                  <div className="card-header-wrapper p-1">
+                    <h5 className="blogs-heading">More Content</h5>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">
-                      Intro Description <span className="required-field">*</span>
-                    </label>
-                    <Editor
-                      tinymceScriptSrc="/tinymce/tinymce.min.js"
-                      value={formData.VenueDescription}
-                      init={getTinyMceInit()}
-                      onEditorChange={handleDescriptionChange}
-                    />
-                    {errors.VenueDescription && (
-                      <div style={{ color: "#dc3545", fontSize: ".875em" }} className="mt-1">
-                        {errors.VenueDescription}
+                  <div className="mt-3">
+                    <p className="text-muted mb-3">
+                      Venue, Setting and Moments section content, along with capacity,
+                      celebration features, intro features, why choose features and moment
+                      items, are managed from their own screens for this page.
+                    </p>
+                    {venueSubcategoryGuid ? (
+                      <div className="d-flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => navigate(`/venue-subcategory-pages/${venueSubcategoryGuid}/intro-features`)}
+                        >
+                          Manage Venue Section &amp; Intro Features
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() =>
+                            navigate(`/venue-subcategory-pages/${venueSubcategoryGuid}/celebration-features`)
+                          }
+                        >
+                          Manage Setting Section &amp; Celebration Features
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => navigate(`/venue-subcategory-pages/${venueSubcategoryGuid}/moments`)}
+                        >
+                          Manage Moments Section &amp; Moment Items
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => navigate(`/venue-subcategory-pages/${venueSubcategoryGuid}/why-choose`)}
+                        >
+                          Manage Why Choose Features
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => navigate(`/venue-subcategory-pages/${venueSubcategoryGuid}/capacity`)}
+                        >
+                          Manage Capacity
+                        </button>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="d-flex flex-column align-items-center">
-                    <div className="profile-user position-relative d-inline-block mx-auto mb-2">
-                      <img
-                        src={formData.VenueImagePreview || allImages.DefultImage}
-                        className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
-                        alt="Venue Preview"
-                      />
-                      <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
-                        <input
-                          id="venueImage"
-                          type="file"
-                          accept="image/*"
-                          className="profile-img-file-input"
-                          onChange={(e) => handleImageChange(e, "VenueImage")}
-                        />
-                        <label htmlFor="venueImage" className="profile-photo-edit avatar-xs">
-                          <span className="avatar-title rounded-circle bg-light text-body shadow">
-                            <i className="ri-camera-fill"></i>
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-                    <small className="text-muted">
-                      Recommended: square (1:1), e.g. 1024×1024px, max 3MB
-                    </small>
-                    {errors.VenueImage && (
-                      <div className="invalid-feedback d-block text-center">
-                        {errors.VenueImage}
-                      </div>
+                    ) : (
+                      <small className="text-muted">
+                        Save this page first to unlock its section managers.
+                      </small>
                     )}
                   </div>
                 </div>
-              </div>
-
-              
-              <div className="card mt-3 p-3">
-                <div className="card-header-wrapper p-1">
-                  <h5 className="blogs-heading">Why Choose Section</h5>
-                </div>
-                <div className="mt-3">
-                  <div className="mb-3">
-                    <label className="form-label">Why Choose Title</label>
-                    <input
-                      type="text"
-                      name="WhyChooseTitle"
-                      value={formData.WhyChooseTitle}
-                      placeholder="Enter Why Choose Title"
-                      onChange={handleInputChange}
-                      className="form-control"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Why Choose Description</label>
-                    <textarea
-                      name="WhyChooseDescription"
-                      value={formData.WhyChooseDescription}
-                      placeholder="Enter Why Choose Description"
-                      onChange={handleInputChange}
-                      className="form-control"
-                      rows="3"
-                    ></textarea>
-                  </div>
-
-                  <div className="d-flex flex-column align-items-center">
-                    <div className="profile-user position-relative d-inline-block mx-auto mb-2">
-                      <img
-                        src={formData.WhyChooseImagePreview || allImages.DefultImage}
-                        className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
-                        alt="Why Choose Preview"
-                      />
-                      <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
-                        <input
-                          id="whyChooseImage"
-                          type="file"
-                          accept="image/*"
-                          className="profile-img-file-input"
-                          onChange={(e) => handleImageChange(e, "WhyChooseImage")}
-                        />
-                        <label htmlFor="whyChooseImage" className="profile-photo-edit avatar-xs">
-                          <span className="avatar-title rounded-circle bg-light text-body shadow">
-                            <i className="ri-camera-fill"></i>
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-                    <small className="text-muted">
-                      Recommended: square (1:1), e.g. 1024×1024px, max 3MB
-                    </small>
-                    {errors.WhyChooseImage && (
-                      <div className="invalid-feedback d-block text-center">
-                        {errors.WhyChooseImage}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="card mt-3 p-3">
-                <div className="card-header-wrapper p-1">
-                  <h5 className="blogs-heading">Open sky Section</h5>
-                </div>
-                <div className="mt-3">
-                  <div className="mb-3">
-                    <label className="form-label">Open Sky Title</label>
-                    <input
-                      type="text"
-                      name="ExploreCtaTitle"
-                      value={formData.ExploreCtaTitle}
-                      placeholder="Enter Explore Cta Title"
-                      onChange={handleInputChange}
-                      className="form-control"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Open Sky Description</label>
-                    <textarea
-                      name="ExploreCtaDescription"
-                      value={formData.ExploreCtaDescription}
-                      placeholder="Enter Explore Cta Description"
-                      onChange={handleInputChange}
-                      className="form-control"
-                      rows="3"
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-
+              )}
             </div>
 
             <div className="col-lg-4">

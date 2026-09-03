@@ -32,7 +32,11 @@ export const AddPageGroup = ({ editMode = false, initialData = {}, onSuccess, se
           setFormData({
             groupName: data.groupName || '',
             groupIcon: data.groupIcon || '',
-            groupOrder: data.groupOrder || '',
+            // The API returns groupOrder as a number, but this field is
+            // driven as a controlled string input (and validateAddPageGroup
+            // calls .trim() on it), so coerce it to a string here rather
+            // than let a number leak into formData.
+            groupOrder: data.groupOrder != null ? String(data.groupOrder) : '',
           });
         } catch (error) {
           handleErrors(error);
@@ -58,7 +62,13 @@ export const AddPageGroup = ({ editMode = false, initialData = {}, onSuccess, se
       try {
         setIsButtonDisabled(true);
         const action = editMode ? updatePageGroup : addPageGroup;
-        await action({ ...formData, id: editMode ? initialData.id : undefined });
+        await action({
+          ...formData,
+          // Sent back to the API as a number, matching what
+          // fetchPageGroupData returns for this field.
+          groupOrder: Number(formData.groupOrder),
+          id: editMode ? initialData.id : undefined,
+        });
         toast.success(`Page group ${editMode ? 'updated' : 'added'} successfully!`);
         setIsButtonDisabled(false);
         
@@ -132,4 +142,3 @@ export const AddPageGroup = ({ editMode = false, initialData = {}, onSuccess, se
     </>
   );
 };
-

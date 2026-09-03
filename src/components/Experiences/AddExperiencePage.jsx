@@ -16,6 +16,12 @@ import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 import { getFullImageUrl } from "../../utils/imageUrl";
 import { getTinyMceInit } from "../../utils/tinymceConfig";
 
+// CtaTitle/CtaDescription and LightsTitle/LightsSubTitle/LightsDescription
+// are still part of formData (and still sent on submit) but are no longer
+// editable from this form - they're managed from the Events and Light
+// screens instead, keyed by the page's own experienceGuid. On create there's
+// nothing fetched yet so they naturally go up empty; on update the values
+// fetched below are carried through unchanged since nothing here touches them.
 const initialFormState = {
   ExperienceCategoryId: "",
   ExperienceCategoryName: "",
@@ -52,6 +58,7 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
   const [loading, setLoading] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [experienceCategories, setExperienceCategories] = useState([]);
+  const [experienceGuid, setExperienceGuid] = useState(null);
   const [PageLevelAccessurl, setPageLevelAccessurl] = useState();
 
   useEffect(() => {
@@ -108,6 +115,7 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
               Description: data.description || "",
               Image: "",
               ImagePreview: getFullImageUrl(data.image),
+              // Carried through untouched - see note above initialFormState.
               CtaTitle: data.ctaTitle || "",
               CtaDescription: data.ctaDescription || "",
               LightsTitle: data.lightsTitle || "",
@@ -117,12 +125,14 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
               MetaKeys: data.metaKeys || "",
               MetaDesc: data.metaDesc || "",
             });
+            setExperienceGuid(data.experienceGuid || null);
           }
         } catch (error) {
           handleErrors(error);
         }
       } else {
         setFormData(initialFormState);
+        setExperienceGuid(null);
       }
     };
 
@@ -203,6 +213,8 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
     payload.append("BannerTitle", formData.BannerTitle);
     payload.append("Title", formData.Title);
     payload.append("Description", formData.Description);
+    // Passed through as-is: empty on create, whatever was last saved (via
+    // the Events/Light screens) on update.
     payload.append("CtaTitle", formData.CtaTitle);
     payload.append("CtaDescription", formData.CtaDescription);
     payload.append("LightsTitle", formData.LightsTitle);
@@ -245,7 +257,9 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
         navigate("/experience-pages");
       } else {
         await addExperiencePage(payload);
-        toast.success("Experience Page added successfully!");
+        toast.success(
+          "Experience Page added! Add Call To Action and Lights section content from the manage screens next."
+        );
         resetForm();
       }
     } catch (error) {
@@ -373,12 +387,12 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
 
               <div className="card mt-3 p-3">
                 <div className="card-header-wrapper p-1">
-                  <h5 className="blogs-heading">Main Content</h5>
+                  <h5 className="blogs-heading">Intro Content</h5>
                 </div>
                 <div className="mt-3">
                   <div className="mb-3">
                     <label className="form-label">
-                      Title <span className="required-field">*</span>
+                      Intro Title<span className="required-field">*</span>
                     </label>
                     <input
                       type="text"
@@ -392,7 +406,7 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                   </div>
                   <div className="mb-3">
                     <label className="form-label">
-                      Description <span className="required-field">*</span>
+                      Intro Description <span className="required-field">*</span>
                     </label>
                     <Editor
                       tinymceScriptSrc="/tinymce/tinymce.min.js"
@@ -439,78 +453,64 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                 </div>
               </div>
 
-              <div className="card mt-3 p-3">
-                <div className="card-header-wrapper p-1">
-                  <h5 className="blogs-heading">Call To Action</h5>
-                </div>
-                <div className="mt-3">
-                  <div className="mb-3">
-                    <label className="form-label">Cta Title</label>
-                    <input
-                      type="text"
-                      name="CtaTitle"
-                      value={formData.CtaTitle}
-                      placeholder="Enter Cta Title"
-                      onChange={handleInputChange}
-                      className="form-control"
-                    />
+              {id && (
+                <div className="card mt-3 p-3">
+                  <div className="card-header-wrapper p-1">
+                    <h5 className="blogs-heading">More Content</h5>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Cta Description</label>
-                    <textarea
-                      name="CtaDescription"
-                      value={formData.CtaDescription}
-                      placeholder="Enter Cta Description"
-                      onChange={handleInputChange}
-                      className="form-control"
-                      rows="3"
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card mt-3 p-3">
-                <div className="card-header-wrapper p-1">
-                  <h5 className="blogs-heading">Lights Section</h5>
-                </div>
-                <div className="mt-3">
-                  <div className="row">
-                    <div className="mb-3 col-lg-6">
-                      <label className="form-label">Lights Title</label>
-                      <input
-                        type="text"
-                        name="LightsTitle"
-                        value={formData.LightsTitle}
-                        placeholder="Enter Lights Title"
-                        onChange={handleInputChange}
-                        className="form-control"
-                      />
-                    </div>
-                    <div className="mb-3 col-lg-6">
-                      <label className="form-label">Lights Sub Title</label>
-                      <input
-                        type="text"
-                        name="LightsSubTitle"
-                        value={formData.LightsSubTitle}
-                        placeholder="Enter Lights Sub Title"
-                        onChange={handleInputChange}
-                        className="form-control"
-                      />
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Lights Description</label>
-                    <textarea
-                      name="LightsDescription"
-                      value={formData.LightsDescription}
-                      placeholder="Enter Lights Description"
-                      onChange={handleInputChange}
-                      className="form-control"
-                      rows="3"
-                    ></textarea>
+                  <div className="mt-3">
+                    <p className="text-muted mb-3">
+                      Call To Action content is managed from the Events screen, and Lights
+                      section content is managed from the Light screen for this page.
+                    </p>
+                    {experienceGuid ? (
+                      <div className="d-flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => navigate(`/experience-pages/${experienceGuid}/events`)}
+                        >
+                          Manage Call To Action &amp; Events
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => navigate(`/experience-pages/${experienceGuid}/light`)}
+                        >
+                          Manage Lights Section &amp; Light Items
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => navigate(`/experience-pages/${experienceGuid}/services`)}
+                        >
+                          Manage Services
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() =>
+                            navigate(`/experience-pages/${experienceGuid}/testimonials`)
+                          }
+                        >
+                          Manage Testimonials
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => navigate(`/experience-pages/${experienceGuid}/wedding`)}
+                        >
+                          Manage Wedding Items
+                        </button>
+                      </div>
+                    ) : (
+                      <small className="text-muted">
+                        Save this page first to unlock its section managers.
+                      </small>
+                    )}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="col-lg-4">

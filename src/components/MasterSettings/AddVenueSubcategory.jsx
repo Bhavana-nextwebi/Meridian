@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Select from 'react-select';
 import { createVenueSubcategory, updateVenueSubcategory, fetchVenueSubcategoryById } from '../../services/venueSubcategoryServices';
 import { fetchVenueCategories } from '../../services/venueCategoryServices';
 import { handleErrors } from '../../utils/errorHandler';
@@ -25,6 +26,85 @@ const validateVenueSubcategory = (formData) => {
 
   const valid = !errors.venueCategoryId && !errors.venueSubcategoryName && !errors.displayOrder;
   return { valid, errors };
+};
+
+// Meridian theme tokens, kept in one place so the react-select
+// custom styles stay in sync with the global CSS theme.
+const THEME = {
+  primary: '#1d4d37',
+  primaryHover: '#17402d',
+  primaryActive: '#123626',
+  secondary: '#c9a24b',
+  secondarySoft: 'rgba(201, 162, 75, 0.15)',
+  primarySoft: 'rgba(29, 77, 55, 0.08)',
+  danger: '#dc3545',
+  border: '#ced4da',
+  text: '#212529',
+  muted: '#8c9296',
+};
+
+const venueCategorySelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    minHeight: 38,
+    borderRadius: 6,
+    borderColor: state.selectProp?.isInvalid
+      ? THEME.danger
+      : state.isFocused
+        ? THEME.primary
+        : THEME.border,
+    boxShadow: state.isFocused ? `0 0 0 0.15rem ${THEME.primarySoft}` : 'none',
+    '&:hover': {
+      borderColor: state.selectProp?.isInvalid ? THEME.danger : THEME.primary,
+    },
+    backgroundColor: '#fff',
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? THEME.primary
+      : state.isFocused
+        ? THEME.primarySoft
+        : '#fff',
+    color: state.isSelected ? '#fff' : THEME.text,
+    cursor: 'pointer',
+    ':active': {
+      backgroundColor: state.isSelected ? THEME.primaryActive : THEME.secondarySoft,
+    },
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: THEME.text,
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: THEME.muted,
+  }),
+  dropdownIndicator: (base, state) => ({
+    ...base,
+    color: state.isFocused ? THEME.primary : THEME.muted,
+    '&:hover': { color: THEME.primary },
+  }),
+  clearIndicator: (base) => ({
+    ...base,
+    color: THEME.muted,
+    '&:hover': { color: THEME.danger },
+  }),
+  indicatorSeparator: (base) => ({
+    ...base,
+    backgroundColor: THEME.border,
+  }),
+  menu: (base) => ({
+    ...base,
+    borderRadius: 6,
+    overflow: 'hidden',
+    boxShadow: '0 4px 14px rgba(18, 54, 38, 0.15)',
+    zIndex: 20,
+  }),
+  input: (base) => ({
+    ...base,
+    color: THEME.text,
+  }),
 };
 
 export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
@@ -69,6 +149,24 @@ export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSucc
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const categoryOptions = venueCategories.map((category) => ({
+    value: category.id,
+    label: category.venueCategoryName,
+  }));
+
+  const selectedCategoryOption =
+    categoryOptions.find((opt) => opt.value === formData.venueCategoryId) || null;
+
+  const handleCategoryChange = (selectedOption) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      venueCategoryId: selectedOption ? selectedOption.value : '',
+    }));
+    if (errors.venueCategoryId) {
+      setErrors((prev) => ({ ...prev, venueCategoryId: '' }));
+    }
   };
 
   const handleSubmit = useCallback(async (e) => {
@@ -131,20 +229,24 @@ export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSucc
                   <div className="col-lg-3 col-md-6 col-sm-12">
                     <div className="mb-3">
                       <label htmlFor="venue_category_id" className="form-label">Venue Category <span className='required-field'>*</span></label>
-                      <select
+                      <Select
+                        inputId="venue_category_id"
                         name="venueCategoryId"
-                        value={formData.venueCategoryId}
-                        onChange={handleInputChange}
-                        className={`form-select ${errors.venueCategoryId ? 'is-invalid' : ''}`}
-                      >
-                        <option value="">Select Venue Category</option>
-                        {venueCategories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.venueCategoryName}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.venueCategoryId && <div className="invalid-feedback">{errors.venueCategoryId}</div>}
+                        options={categoryOptions}
+                        value={selectedCategoryOption}
+                        onChange={handleCategoryChange}
+                        placeholder="Search or select category..."
+                        isClearable
+                        isSearchable
+                        styles={venueCategorySelectStyles}
+                        selectProp={{ isInvalid: !!errors.venueCategoryId }}
+                        noOptionsMessage={() => 'No matching categories'}
+                      />
+                      {errors.venueCategoryId && (
+                        <div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
+                          {errors.venueCategoryId}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-6 col-sm-12">

@@ -9,6 +9,10 @@ import {
   fetchExperienceLightsByExperienceGuid,
   deleteExperienceLight,
 } from "../../services/experienceLightServices";
+import {
+  fetchExperiencePageByGuid,
+  updateExperiencePage,
+} from "../../services/experiencePageServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
@@ -30,6 +34,12 @@ const initialFormState = {
   DisplayOrder: "",
 };
 
+const initialSectionFormState = {
+  LightsTitle: "",
+  LightsSubTitle: "",
+  LightsDescription: "",
+};
+
 export const ExperienceLightDetails = () => {
   const { experienceGuid } = useParams();
   const [lightItems, setLightItems] = useState([]);
@@ -39,6 +49,13 @@ export const ExperienceLightDetails = () => {
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const mediaInputRef = useRef(null);
+
+  // Page-level "Lights section" content, edited here since individual light
+  // items are displayed alongside it on the experience page.
+  const [pageRecord, setPageRecord] = useState(null);
+  const [sectionFormData, setSectionFormData] = useState(initialSectionFormState);
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [isSectionSaving, setIsSectionSaving] = useState(false);
 
   const loadLightItems = async () => {
     setLoading(true);
@@ -52,8 +69,28 @@ export const ExperienceLightDetails = () => {
     }
   };
 
+  const loadSection = async () => {
+    setSectionLoading(true);
+    try {
+      const data = await fetchExperiencePageByGuid(experienceGuid);
+      if (data) {
+        setPageRecord(data);
+        setSectionFormData({
+          LightsTitle: data.lightsTitle || "",
+          LightsSubTitle: data.lightsSubTitle || "",
+          LightsDescription: data.lightsDescription || "",
+        });
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setSectionLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadLightItems();
+    loadSection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienceGuid]);
 
@@ -192,6 +229,49 @@ export const ExperienceLightDetails = () => {
     }
   };
 
+  // --- Lights section (page-level) handlers ---
+
+  const handleSectionInputChange = (e) => {
+    const { name, value } = e.target;
+    setSectionFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // The update endpoint expects the whole page record, so the rest of the
+  // fields are carried over unchanged from what was last fetched, and only
+  // the Lights fields are overridden. No image fields belong to this
+  // section, so existing images on the page are naturally left untouched.
+  const handleSectionSubmit = async (e) => {
+    e.preventDefault();
+    if (!pageRecord) return;
+
+    setIsSectionSaving(true);
+    try {
+      const payload = new FormData();
+      payload.append("Id", pageRecord.id);
+      payload.append("ExperienceCategoryId", pageRecord.experienceCategoryId);
+      payload.append("ExperienceCategoryName", pageRecord.experienceCategoryName || "");
+      payload.append("BannerTitle", pageRecord.bannerTitle || "");
+      payload.append("Title", pageRecord.title || "");
+      payload.append("Description", pageRecord.description || "");
+      payload.append("CtaTitle", pageRecord.ctaTitle || "");
+      payload.append("CtaDescription", pageRecord.ctaDescription || "");
+      payload.append("LightsTitle", sectionFormData.LightsTitle);
+      payload.append("LightsSubTitle", sectionFormData.LightsSubTitle);
+      payload.append("LightsDescription", sectionFormData.LightsDescription);
+      payload.append("PageTitle", pageRecord.pageTitle || "");
+      payload.append("MetaKeys", pageRecord.metaKeys || "");
+      payload.append("MetaDesc", pageRecord.metaDesc || "");
+
+      await updateExperiencePage(payload);
+      toast.success("Lights section updated successfully!");
+      loadSection();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSectionSaving(false);
+    }
+  };
+
   const isVideo = formData.MediaType === MEDIA_TYPE_VIDEO;
 
   return (
@@ -218,6 +298,56 @@ export const ExperienceLightDetails = () => {
       </div>
 
       <div className="card mt-xxl-n5 p-3">
+        <div className="card-header-wrapper p-1">
+          <h5 className="blogs-heading">Lights Section</h5>
+        </div>
+        {sectionLoading ? (
+          <Loading />
+        ) : (
+          <form onSubmit={handleSectionSubmit} className="mt-3">
+            <div className="row">
+              <div className="mb-3 col-lg-6">
+                <label className="form-label">Lights Title</label>
+                <input
+                  type="text"
+                  name="LightsTitle"
+                  value={sectionFormData.LightsTitle}
+                  placeholder="Enter Lights Title"
+                  onChange={handleSectionInputChange}
+                  className="form-control"
+                />
+              </div>
+              <div className="mb-3 col-lg-6">
+                <label className="form-label">Lights Sub Title</label>
+                <input
+                  type="text"
+                  name="LightsSubTitle"
+                  value={sectionFormData.LightsSubTitle}
+                  placeholder="Enter Lights Sub Title"
+                  onChange={handleSectionInputChange}
+                  className="form-control"
+                />
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Lights Description</label>
+              <textarea
+                name="LightsDescription"
+                value={sectionFormData.LightsDescription}
+                placeholder="Enter Lights Description"
+                onChange={handleSectionInputChange}
+                className="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+            <button type="submit" className="btn btn-secondary" disabled={isSectionSaving}>
+              {isSectionSaving ? "Saving" : "Save Lights Section"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className="card mt-3 p-3">
         <div className="card-header-wrapper p-1">
           <h5 className="blogs-heading">
             {editingId ? "Edit Light Section" : "Add Light Section"}

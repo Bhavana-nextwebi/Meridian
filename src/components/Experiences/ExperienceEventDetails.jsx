@@ -9,9 +9,14 @@ import {
   fetchExperienceEventsByExperienceGuid,
   deleteExperienceEvent,
 } from "../../services/experienceEventServices";
+import {
+  fetchExperiencePageByGuid,
+  updateExperiencePage,
+} from "../../services/experiencePageServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
+import { Loading } from "../Common/OtherElements/Loading";
 import { TableDataStatusError } from "../Common/OtherElements/TableDataStatusError";
 import TableHeader from "../Common/TableComponent/TableHeader";
 import { getFullImageUrl } from "../../utils/imageUrl";
@@ -24,6 +29,11 @@ const initialFormState = {
   DisplayOrder: "",
 };
 
+const initialSectionFormState = {
+  CtaTitle: "",
+  CtaDescription: "",
+};
+
 export const ExperienceEventDetails = () => {
   const { experienceGuid } = useParams();
   const [events, setEvents] = useState([]);
@@ -33,6 +43,13 @@ export const ExperienceEventDetails = () => {
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const eventImageInputRef = useRef(null);
+
+  // Page-level "Call To Action" content, edited here since events are
+  // displayed alongside it on the experience page.
+  const [pageRecord, setPageRecord] = useState(null);
+  const [sectionFormData, setSectionFormData] = useState(initialSectionFormState);
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [isSectionSaving, setIsSectionSaving] = useState(false);
 
   const loadEvents = async () => {
     setLoading(true);
@@ -46,8 +63,27 @@ export const ExperienceEventDetails = () => {
     }
   };
 
+  const loadSection = async () => {
+    setSectionLoading(true);
+    try {
+      const data = await fetchExperiencePageByGuid(experienceGuid);
+      if (data) {
+        setPageRecord(data);
+        setSectionFormData({
+          CtaTitle: data.ctaTitle || "",
+          CtaDescription: data.ctaDescription || "",
+        });
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setSectionLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadEvents();
+    loadSection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienceGuid]);
 
@@ -166,6 +202,49 @@ export const ExperienceEventDetails = () => {
     }
   };
 
+  // --- Call To Action section (page-level) handlers ---
+
+  const handleSectionInputChange = (e) => {
+    const { name, value } = e.target;
+    setSectionFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // The update endpoint expects the whole page record, so the rest of the
+  // fields are carried over unchanged from what was last fetched, and only
+  // the Cta fields are overridden. No image fields belong to this section,
+  // so existing images on the page are naturally left untouched.
+  const handleSectionSubmit = async (e) => {
+    e.preventDefault();
+    if (!pageRecord) return;
+
+    setIsSectionSaving(true);
+    try {
+      const payload = new FormData();
+      payload.append("Id", pageRecord.id);
+      payload.append("ExperienceCategoryId", pageRecord.experienceCategoryId);
+      payload.append("ExperienceCategoryName", pageRecord.experienceCategoryName || "");
+      payload.append("BannerTitle", pageRecord.bannerTitle || "");
+      payload.append("Title", pageRecord.title || "");
+      payload.append("Description", pageRecord.description || "");
+      payload.append("CtaTitle", sectionFormData.CtaTitle);
+      payload.append("CtaDescription", sectionFormData.CtaDescription);
+      payload.append("LightsTitle", pageRecord.lightsTitle || "");
+      payload.append("LightsSubTitle", pageRecord.lightsSubTitle || "");
+      payload.append("LightsDescription", pageRecord.lightsDescription || "");
+      payload.append("PageTitle", pageRecord.pageTitle || "");
+      payload.append("MetaKeys", pageRecord.metaKeys || "");
+      payload.append("MetaDesc", pageRecord.metaDesc || "");
+
+      await updateExperiencePage(payload);
+      toast.success("Call To Action section updated successfully!");
+      loadSection();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSectionSaving(false);
+    }
+  };
+
   return (
     <>
       <div className="row">
@@ -190,6 +269,43 @@ export const ExperienceEventDetails = () => {
       </div>
 
       <div className="card mt-xxl-n5 p-3">
+        <div className="card-header-wrapper p-1">
+          <h5 className="blogs-heading">Call To Action</h5>
+        </div>
+        {sectionLoading ? (
+          <Loading />
+        ) : (
+          <form onSubmit={handleSectionSubmit} className="mt-3">
+            <div className="mb-3">
+              <label className="form-label">Cta Title</label>
+              <input
+                type="text"
+                name="CtaTitle"
+                value={sectionFormData.CtaTitle}
+                placeholder="Enter Cta Title"
+                onChange={handleSectionInputChange}
+                className="form-control"
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Cta Description</label>
+              <textarea
+                name="CtaDescription"
+                value={sectionFormData.CtaDescription}
+                placeholder="Enter Cta Description"
+                onChange={handleSectionInputChange}
+                className="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+            <button type="submit" className="btn btn-secondary" disabled={isSectionSaving}>
+              {isSectionSaving ? "Saving" : "Save Call To Action"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className="card mt-3 p-3">
         <div className="card-header-wrapper p-1">
           <h5 className="blogs-heading">
             {editingId ? "Edit Experience Event" : "Add Experience Event"}

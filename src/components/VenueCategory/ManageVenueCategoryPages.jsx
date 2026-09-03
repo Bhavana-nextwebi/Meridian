@@ -1,10 +1,9 @@
-
-
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
-  deleteExperiencePage,
-  fetchAllExperiencePages,
-} from "../../services/experiencePageServices";
+  deleteVenueCategoryPage,
+  fetchAllVenueCategoryPages,
+} from "../../services/venueCategoryPageServices";
+import { fetchVenueCategories } from "../../services/venueCategoryServices";
 import TableHeader from "../Common/TableComponent/TableHeader";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -15,16 +14,16 @@ import { handleErrors } from "../../utils/errorHandler";
 import { Pagination } from "../Common/TableComponent/Pagination";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 
-export const ManageExperiencesPages = () => {
+export const ManageVenueCategoryPages = () => {
   const navigate = useNavigate();
   const [entriesPerPage, setEntriesPerPage] = useState(30);
   const [currentPage, setCurrentPage] = useState(1);
-  const [allExperiencePages, setAllExperiencePages] = useState([]);
+  const [allPages, setAllPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchedTerm, setSearchedTerm] = useState("");
   const [pageAccessDetails, setPageAccessDetails] = useState([]);
-  const PageLevelAccessurl = "experience-pages";
+  const PageLevelAccessurl = "venue-category-pages";
   const { pageAccessData } = usePageLevelAccess(PageLevelAccessurl);
   const searchInputRef = useRef(null);
 
@@ -41,37 +40,50 @@ export const ManageExperiencesPages = () => {
   }, [pageAccessData, navigate]);
 
   useEffect(() => {
-    const loadExperiencePages = async () => {
+    const loadPages = async () => {
       setLoading(true);
       try {
-        const result = await fetchAllExperiencePages();
-        setAllExperiencePages(result || []);
+        const [pagesResult, categoriesResult] = await Promise.all([
+          fetchAllVenueCategoryPages(),
+          fetchVenueCategories(),
+        ]);
+
+        const categoryMap = new Map(
+          (categoriesResult || []).map((cat) => [cat.id, cat.venueCategoryName])
+        );
+
+        const pagesWithNames = (pagesResult || []).map((page) => ({
+          ...page,
+          venueCategoryName: categoryMap.get(page.venueCategoryId) || "—",
+        }));
+
+        setAllPages(pagesWithNames);
       } catch (error) {
         handleErrors(error);
       } finally {
         setLoading(false);
       }
     };
-    loadExperiencePages();
+    loadPages();
   }, []);
 
-  const filteredExperiencePages = useMemo(() => {
-    if (!searchedTerm.trim()) return allExperiencePages;
+  const filteredPages = useMemo(() => {
+    if (!searchedTerm.trim()) return allPages;
     const term = searchedTerm.trim().toLowerCase();
-    return allExperiencePages.filter((item) =>
-      [item.title, item.bannerTitle, item.experienceCategoryName]
+    return allPages.filter((item) => {
+      return [item.bannerTitle, item.venueCategoryName]
         .filter(Boolean)
-        .some((field) => field.toLowerCase().includes(term))
-    );
-  }, [allExperiencePages, searchedTerm]);
+        .some((field) => field.toLowerCase().includes(term));
+    });
+  }, [allPages, searchedTerm]);
 
-  const totalCount = filteredExperiencePages.length;
+  const totalCount = filteredPages.length;
   const totalPages = Math.ceil(totalCount / entriesPerPage) || 1;
 
-  const paginatedExperiencePages = useMemo(() => {
+  const paginatedPages = useMemo(() => {
     const start = (currentPage - 1) * entriesPerPage;
-    return filteredExperiencePages.slice(start, start + entriesPerPage);
-  }, [filteredExperiencePages, currentPage, entriesPerPage]);
+    return filteredPages.slice(start, start + entriesPerPage);
+  }, [filteredPages, currentPage, entriesPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -96,12 +108,12 @@ export const ManageExperiencesPages = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = await confirmDelete("Experience Page");
+    const confirmed = await confirmDelete("Venue Category Page");
     if (confirmed) {
       try {
-        await deleteExperiencePage(id);
-        setAllExperiencePages((prev) => prev.filter((item) => item.id !== id));
-        Swal.fire("Deleted!", "The experience page has been deleted successfully.", "success");
+        await deleteVenueCategoryPage(id);
+        setAllPages((prev) => prev.filter((item) => item.id !== id));
+        Swal.fire("Deleted!", "The venue category page has been deleted successfully.", "success");
       } catch (error) {
         handleErrors(error);
       }
@@ -140,16 +152,18 @@ export const ManageExperiencesPages = () => {
             border: none;
             font-size: 16px;
           }
-          .action-icon-services { background: #dbeafe; color: #1d4ed8; }
-          .action-icon-services:hover { background: #bfdbfe; }
-          .action-icon-testimonials { background: #d4f7dc; color: #1e8449; }
-          .action-icon-testimonials:hover { background: #b8f0c6; }
-          .action-icon-events { background: #fef3c7; color: #b45309; }
-          .action-icon-events:hover { background: #fde8a3; }
-          .action-icon-light { background: #fce7f3; color: #be185d; }
-          .action-icon-light:hover { background: #fbcfe8; }
-          .action-icon-wedding { background: #ede9fe; color: #6d28d9; }
-          .action-icon-wedding:hover { background: #ddd6fe; }
+          .action-icon-gallery { background: #dbeafe; color: #1d4ed8; }
+          .action-icon-gallery:hover { background: #bfdbfe; }
+          .action-icon-hosted { background: #ffe4e6; color: #be123c; }
+          .action-icon-hosted:hover { background: #fecdd3; }
+          .action-icon-distinctive { background: #ede9fe; color: #6d28d9; }
+          .action-icon-distinctive:hover { background: #ddd6fe; }
+          .action-icon-moments { background: #fef3c7; color: #b45309; }
+          .action-icon-moments:hover { background: #fde68a; }
+          .action-icon-why { background: #cffafe; color: #0e7490; }
+          .action-icon-why:hover { background: #a5f3fc; }
+          .action-icon-faq { background: #dcfce7; color: #15803d; }
+          .action-icon-faq:hover { background: #bbf7d0; }
         `}
       </style>
       {pageAccessDetails.viewAccess ? (
@@ -157,10 +171,10 @@ export const ManageExperiencesPages = () => {
           <div className="col-xxl-12">
             <div className="card mt-xxl-n5">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <h5 className="mb-sm-2 mt-sm-2">Manage Experience Pages</h5>
+                <h5 className="mb-sm-2 mt-sm-2">Manage Venue Category Pages</h5>
                 {pageAccessDetails.addAccess && (
                   <button className="btn btn-secondary" onClick={() => navigate("add")}>
-                    Add Experience Page
+                    Add Venue Category Page
                   </button>
                 )}
               </div>
@@ -214,92 +228,102 @@ export const ManageExperiencesPages = () => {
                       <TableHeader
                         columns={[
                           "#",
-                          "Experience Category",
-                          "Title",
+                          "Venue Category",
                           "Banner Title",
-                          "Services",
-                          "Testimonials",
-                          "Events",
-                          "Light",
-                          "Gallery",
+                          "Intro & Gallery",
+                          "Hosted",
+                          "Distinctive",
+                          "Moments",
+                          "Why Choose",
+                          "FAQs",
                           "Action",
                         ]}
                       />
                       <tbody className="manage-page-group-table-values p-3">
-                        {paginatedExperiencePages.length === 0 ? (
+                        {paginatedPages.length === 0 ? (
                           <TableDataStatusError colspan="10" />
                         ) : (
-                          paginatedExperiencePages.map((item, index) => (
+                          paginatedPages.map((item, index) => (
                             <tr key={item.id}>
                               <td>{(currentPage - 1) * entriesPerPage + index + 1}</td>
-                              <td>{item.experienceCategoryName}</td>
-                              <td>{item.title}</td>
+                              <td>{item.venueCategoryName}</td>
                               <td>{item.bannerTitle}</td>
 
                               <td className="text-center">
                                 <button
                                   type="button"
-                                  className="action-icon-btn action-icon-services"
-                                  title="Manage Services"
-                                  onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/services`)
-                                  }
-                                >
-                                  <i className="ri-service-line"></i>
-                                </button>
-                              </td>
-
-                              <td className="text-center">
-                                <button
-                                  type="button"
-                                  className="action-icon-btn action-icon-testimonials"
-                                  title="Manage Testimonials"
-                                  onClick={() =>
-                                    navigate(
-                                      `/experience-pages/${item.experienceGuid}/testimonials`
-                                    )
-                                  }
-                                >
-                                  <i className="ri-chat-quote-line"></i>
-                                </button>
-                              </td>
-
-                              <td className="text-center">
-                                <button
-                                  type="button"
-                                  className="action-icon-btn action-icon-events"
-                                  title="Manage Events"
-                                  onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/events`)
-                                  }
-                                >
-                                  <i className="ri-calendar-event-line"></i>
-                                </button>
-                              </td>
-
-                              <td className="text-center">
-                                <button
-                                  type="button"
-                                  className="action-icon-btn action-icon-light"
-                                  title="Manage Light Sections"
-                                  onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/light`)
-                                  }
-                                >
-                                  <i className="ri-lightbulb-line"></i>
-                                </button>
-                              </td>
-
-                              <td className="text-center">
-                                <button
-                                  type="button"
                                   className="action-icon-btn action-icon-gallery"
-                                  title="Manage Gallery Items"
+                                  title="Manage Intro & Gallery"
                                   onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/wedding`)
+                                    navigate(`/venue-category-pages/${item.venueCategoryGuid}/gallery`)
                                   }
                                 >
-                                  <i className="ri-heart-3-line"></i>
+                                  <i className="ri-image-2-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-hosted"
+                                  title="Manage Hosted Section"
+                                  onClick={() =>
+                                    navigate(`/venue-category-pages/${item.venueCategoryGuid}/hosted`)
+                                  }
+                                >
+                                  <i className="ri-cake-2-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-distinctive"
+                                  title="Manage Distinctive Section"
+                                  onClick={() =>
+                                    navigate(`/venue-category-pages/${item.venueCategoryGuid}/distinctive`)
+                                  }
+                                >
+                                  <i className="ri-award-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-moments"
+                                  title="Manage Moments"
+                                  onClick={() =>
+                                    navigate(`/venue-category-pages/${item.venueCategoryGuid}/moments`)
+                                  }
+                                >
+                                  <i className="ri-star-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-why"
+                                  title="Manage Why Choose Section"
+                                  onClick={() =>
+                                    navigate(`/venue-category-pages/${item.venueCategoryGuid}/why-choose`)
+                                  }
+                                >
+                                  <i className="ri-heart-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-faq"
+                                  title="Manage FAQs"
+                                  onClick={() =>
+                                    navigate(`/venue-category-pages/${item.venueCategoryGuid}/faqs`)
+                                  }
+                                >
+                                  <i className="ri-question-answer-line"></i>
                                 </button>
                               </td>
 

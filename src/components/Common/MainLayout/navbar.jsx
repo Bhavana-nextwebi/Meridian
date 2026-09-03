@@ -8,15 +8,13 @@ import "simplebar-react/dist/simplebar.min.css";
 
 export const Navbar = () => {
   const [menus, setMenus] = useState([]);
+  const [openGroup, setOpenGroup] = useState(null);
   const location = useLocation();
 
   const isActive = (path) => {
     const normalized = path.startsWith("/") ? path : `/${path}`;
     return location.pathname === normalized;
   };
-
-  const isGroupActive = (pages) =>
-    pages.some((page) => isActive(`/${page.pageLink}`));
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -40,6 +38,24 @@ export const Navbar = () => {
     acc[menu.pageGroupName].push(menu);
     return acc;
   }, {});
+
+  // Auto-open the group that contains the currently active route,
+  // so a refresh/navigation lands with the right group expanded.
+  useEffect(() => {
+    const activeGroup = Object.keys(groupedMenus).find((groupName) =>
+      groupedMenus[groupName]
+        .filter((page) => page.showInMenu && page.viewAccess)
+        .some((page) => isActive(`/${page.pageLink}`))
+    );
+    if (activeGroup) {
+      setOpenGroup(activeGroup);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menus, location.pathname]);
+
+  const toggleGroup = (groupName) => {
+    setOpenGroup((prev) => (prev === groupName ? null : groupName));
+  };
 
   return (
     <div className="app-menu navbar-menu">
@@ -83,22 +99,25 @@ export const Navbar = () => {
 
               if (visiblePages.length === 0) return null;
 
+              const isOpen = openGroup === groupName;
+
               return (
                 <li className="nav-item" key={index}>
                   {visiblePages.length > 1 ? (
                     <>
                       <a
-                        className={`nav-link menu-link${
-                          isGroupActive(visiblePages) ? " active" : ""
-                        }`}
+                        className={`nav-link menu-link${isOpen ? " active" : ""}`}
                         href={`#sidebar${groupName.replace(/\s+/g, "")}`}
-                        data-bs-toggle="collapse"
                         role="button"
-                        aria-expanded={isGroupActive(visiblePages)}
+                        aria-expanded={isOpen}
                         aria-controls={`sidebar${groupName.replace(
                           /\s+/g,
                           ""
                         )}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleGroup(groupName);
+                        }}
                       >
                         <i
                           dangerouslySetInnerHTML={{
@@ -108,9 +127,7 @@ export const Navbar = () => {
                         <span>{groupName}</span>
                       </a>
                       <div
-                        className={`collapse menu-dropdown${
-                          isGroupActive(visiblePages) ? " show" : ""
-                        }`}
+                        className={`collapse menu-dropdown${isOpen ? " show" : ""}`}
                         id={`sidebar${groupName.replace(/\s+/g, "")}`}
                       >
                         <ul className="nav nav-sm flex-column">

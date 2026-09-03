@@ -63,6 +63,26 @@ import { VenueWhyChooseFeaturesPage } from "../pages/VenueWhyChooseFeaturesPage"
 import { VenueFaqPage } from "../pages/VenueFaqPage";
 import { VenueOpenSkyPage } from "../pages/VenueOpenSkyPage";
 
+// Venue Category Pages management
+import { VenueCategoryPageAdd } from "../pages/VenueCategoryPageAdd";
+import { VenueCategoryPageManage } from "../pages/VenueCategoryPageManage";
+import { VenueCategoryGalleryPage } from "../pages/VenueCategoryGalleryPage";
+import { VenueCategoryHostedPage } from "../pages/VenueCategoryHostedPage";
+import { VenueCategoryDistinctivePage } from "../pages/VenueCategoryDistinctivePage";
+import { VenueCategoryMomentsPage } from "../pages/VenueCategoryMomentsPage";
+import { VenueCategoryWhyChoosePage } from "../pages/VenueCategoryWhyChoosePage";
+import { VenueCategoryFaqPage } from "../pages/VenueCategoryFaqPage";
+
+// Venue Subcategory Pages management
+import { VenueSubcategoryPageAdd } from "../pages/VenueSubcategoryPageAdd";
+import { VenueSubcategoryPageManage } from "../pages/VenueSubcategoryPageManage";
+import { VenueSubcategoryCapacityPage } from "../pages/VenueSubcategoryCapacityPage";
+import { VenueSubcategoryCelebrationFeaturesPage } from "../pages/VenueSubcategoryCelebrationFeaturesPage";
+import { VenueSubcategoryFaqPage } from "../pages/VenueSubcategoryFaqPage";
+import { VenueSubcategoryIntroFeaturesPage } from "../pages/VenueSubcategoryIntroFeaturesPage";
+import { VenueSubcategoryMomentsPage } from "../pages/VenueSubcategoryMomentsPage";
+import { VenueSubcategoryWhyChoosePage } from "../pages/VenueSubcategoryWhyChoosePage";
+
 
 
 const routes = [
@@ -157,6 +177,46 @@ const routes = [
         { path: ":venueGuid/why-choose-us", element: <VenueWhyChooseFeaturesPage /> },
         { path: ":venueGuid/faqs", element: <VenueFaqPage /> },
         { path: ":venueGuid/open-sky", element: <VenueOpenSkyPage /> },
+      ],
+    },
+      //--------------------------
+
+    // Venue Category Pages
+    {path:"venue-category-pages",element:<VenueCategoryPageManage/>},
+    {
+      path: "venue-category-pages",
+      children: [
+        { path: "add", element: <VenueCategoryPageAdd /> },
+        { path: "update/:id", element: <VenueCategoryPageAdd /> },
+        { path: ":venueCategoryGuid/gallery", element: <VenueCategoryGalleryPage /> },
+        { path: ":venueCategoryGuid/hosted", element: <VenueCategoryHostedPage /> },
+        { path: ":venueCategoryGuid/distinctive", element: <VenueCategoryDistinctivePage /> },
+        { path: ":venueCategoryGuid/moments", element: <VenueCategoryMomentsPage /> },
+        { path: ":venueCategoryGuid/why-choose", element: <VenueCategoryWhyChoosePage /> },
+        { path: ":venueCategoryGuid/faqs", element: <VenueCategoryFaqPage /> },
+      ],
+    },
+      //--------------------------
+
+    // Venue Subcategory Pages
+    {path:"venue-subcategory-pages",element:<VenueSubcategoryPageManage/>},
+    {
+      path: "venue-subcategory-pages",
+      children: [
+        { path: "add", element: <VenueSubcategoryPageAdd /> },
+        { path: "update/:id", element: <VenueSubcategoryPageAdd /> },
+        { path: ":venueSubcategoryGuid/capacity", element: <VenueSubcategoryCapacityPage /> },
+        {
+          path: ":venueSubcategoryGuid/celebration-features",
+          element: <VenueSubcategoryCelebrationFeaturesPage />,
+        },
+        { path: ":venueSubcategoryGuid/faqs", element: <VenueSubcategoryFaqPage /> },
+        {
+          path: ":venueSubcategoryGuid/intro-features",
+          element: <VenueSubcategoryIntroFeaturesPage />,
+        },
+        { path: ":venueSubcategoryGuid/moments", element: <VenueSubcategoryMomentsPage /> },
+        { path: ":venueSubcategoryGuid/why-choose", element: <VenueSubcategoryWhyChoosePage /> },
       ],
     },
       //--------------------------
