@@ -4,6 +4,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
+import { Editor } from "@tinymce/tinymce-react";
+import { getTinyMceInit } from "../../utils/tinymceConfig";
+
 import {
   addVenueSubcategoryCelebrationFeature,
   updateVenueSubcategoryCelebrationFeature,
@@ -190,6 +193,13 @@ export const ManageVenueSubcategoryCelebrationFeatures = () => {
     setSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
+  // TinyMCE fires content changes through onEditorChange, not a normal
+  // input event, so it gets its own handler (mirrors AddBlogs.jsx).
+  const handleSectionDescriptionChange = (content) => {
+    setSectionFormData((prevData) => ({ ...prevData, SettingDescription: content }));
+    setSectionErrors((prevErrors) => ({ ...prevErrors, SettingDescription: "" }));
+  };
+
   const handleSectionImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -307,14 +317,17 @@ export const ManageVenueSubcategoryCelebrationFeatures = () => {
               </div>
               <div className="mb-3">
                 <label className="form-label">Setting Description</label>
-                <textarea
-                  name="SettingDescription"
+                <Editor
+                  tinymceScriptSrc="/tinymce/tinymce.min.js"
                   value={sectionFormData.SettingDescription}
-                  placeholder="Enter Setting Description"
-                  onChange={handleSectionInputChange}
-                  className="form-control"
-                  rows="3"
-                ></textarea>
+                  init={getTinyMceInit()}
+                  onEditorChange={handleSectionDescriptionChange}
+                />
+                {sectionErrors.SettingDescription && (
+                  <div style={{ color: "#dc3545", fontSize: ".875em" }}>
+                    {sectionErrors.SettingDescription}
+                  </div>
+                )}
               </div>
 
               <div className="d-flex flex-column align-items-center mb-3">

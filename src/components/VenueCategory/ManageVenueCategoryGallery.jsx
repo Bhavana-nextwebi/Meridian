@@ -4,6 +4,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
+import { Editor } from "@tinymce/tinymce-react";
+import { getTinyMceInit } from "../../utils/tinymceConfig";
+
 import {
   addVenueCategoryGallery,
   updateVenueCategoryGallery,
@@ -67,22 +70,22 @@ export const ManageVenueCategoryGallery = () => {
   };
 
   const loadIntro = async () => {
-  setIntroLoading(true);
-  try {
-    const data = await fetchVenueCategoryPageByGuid(venueCategoryGuid);
-    if (data) {
-      setPageRecord(data);
-      setIntroFormData({
-        IntroTitle: data.section1Title || "",
-        IntroDesc: data.section1Desc || "",
-      });
+    setIntroLoading(true);
+    try {
+      const data = await fetchVenueCategoryPageByGuid(venueCategoryGuid);
+      if (data) {
+        setPageRecord(data);
+        setIntroFormData({
+          IntroTitle: data.section1Title || "",
+          IntroDesc: data.section1Desc || "",
+        });
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIntroLoading(false);
     }
-  } catch (error) {
-    handleErrors(error);
-  } finally {
-    setIntroLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     loadGallery();
@@ -190,6 +193,13 @@ export const ManageVenueCategoryGallery = () => {
     setIntroErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
+  // TinyMCE fires content changes through onEditorChange, not a normal
+  // input event, so it gets its own handler (mirrors AddBlogs.jsx).
+  const handleIntroDescChange = (content) => {
+    setIntroFormData((prevData) => ({ ...prevData, IntroDesc: content }));
+    setIntroErrors((prevErrors) => ({ ...prevErrors, IntroDesc: "" }));
+  };
+
   const validateIntro = () => {
     const newErrors = {};
     let valid = true;
@@ -219,7 +229,7 @@ export const ManageVenueCategoryGallery = () => {
     setIsIntroSaving(true);
     try {
       const payload = new FormData();
-     payload.append("Id", pageRecord.id);
+      payload.append("Id", pageRecord.id);
       payload.append("VenueCategoryId", pageRecord.venueCategoryId);
       payload.append("BannerTitle", pageRecord.bannerTitle || "");
       payload.append("BannerImage", pageRecord.bannerImage || "");
@@ -235,7 +245,7 @@ export const ManageVenueCategoryGallery = () => {
       payload.append("Section4Title", pageRecord.section4Title || "");
       payload.append("Section5Title", pageRecord.section5Title || "");
       payload.append("Section5Desc", pageRecord.section5Desc || "");
-      payload.append("FaqDesc",pageRecord.FaqDesc || "");
+      payload.append("FaqDesc", pageRecord.FaqDesc || "");
       payload.append("CtaTitle", pageRecord.ctaTitle || "");
       payload.append("CtaSubTitle", pageRecord.ctaSubTitle || "");
       payload.append("CtaDesc", pageRecord.ctaDesc || "");
@@ -305,16 +315,16 @@ export const ManageVenueCategoryGallery = () => {
                 <label className="form-label">
                   Intro Description <span className="required-field">*</span>
                 </label>
-                <textarea
-                  name="IntroDesc"
+                <Editor
+                  tinymceScriptSrc="/tinymce/tinymce.min.js"
                   value={introFormData.IntroDesc}
-                  placeholder="Enter Intro Description"
-                  onChange={handleIntroInputChange}
-                  className={`form-control ${introErrors.IntroDesc ? "is-invalid" : ""}`}
-                  rows="3"
-                ></textarea>
+                  init={getTinyMceInit()}
+                  onEditorChange={handleIntroDescChange}
+                />
                 {introErrors.IntroDesc && (
-                  <div className="invalid-feedback">{introErrors.IntroDesc}</div>
+                  <div style={{ color: "#dc3545", fontSize: ".875em" }}>
+                    {introErrors.IntroDesc}
+                  </div>
                 )}
               </div>
 

@@ -82,6 +82,7 @@ import { VenueSubcategoryFaqPage } from "../pages/VenueSubcategoryFaqPage";
 import { VenueSubcategoryIntroFeaturesPage } from "../pages/VenueSubcategoryIntroFeaturesPage";
 import { VenueSubcategoryMomentsPage } from "../pages/VenueSubcategoryMomentsPage";
 import { VenueSubcategoryWhyChoosePage } from "../pages/VenueSubcategoryWhyChoosePage";
+import { TestimonialManage } from "../pages/TestimonialManage";
 
 
 
@@ -98,6 +99,8 @@ const routes = [
       { path: "page-group", element: <PageGroup /> },
       { path: "page-master", element: <PageMaster /> },
       { path: "create-role", element: <CreateRoles /> },
+
+      {path:"testimonials",element:<TestimonialManage/>},
 
       {
         path: "Manage-role-access/:roleId/:roleName",

@@ -4,6 +4,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
+import { Editor } from "@tinymce/tinymce-react";
+import { getTinyMceInit } from "../../utils/tinymceConfig";
+
 import {
   addVenueSubcategoryIntroFeature,
   updateVenueSubcategoryIntroFeature,
@@ -179,6 +182,13 @@ export const ManageVenueSubcategoryIntroFeatures = () => {
     setSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
+  // TinyMCE fires content changes through onEditorChange, not a normal
+  // input event, so it gets its own handler (mirrors AddBlogs.jsx).
+  const handleSectionDescriptionChange = (content) => {
+    setSectionFormData((prevData) => ({ ...prevData, VenueDescription: content }));
+    setSectionErrors((prevErrors) => ({ ...prevErrors, VenueDescription: "" }));
+  };
+
   const handleSectionImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -302,16 +312,16 @@ export const ManageVenueSubcategoryIntroFeatures = () => {
                 <label className="form-label">
                   Venue Description <span className="required-field">*</span>
                 </label>
-                <textarea
-                  name="VenueDescription"
+                <Editor
+                  tinymceScriptSrc="/tinymce/tinymce.min.js"
                   value={sectionFormData.VenueDescription}
-                  placeholder="Enter Venue Description"
-                  onChange={handleSectionInputChange}
-                  className={`form-control ${sectionErrors.VenueDescription ? "is-invalid" : ""}`}
-                  rows="3"
-                ></textarea>
+                  init={getTinyMceInit()}
+                  onEditorChange={handleSectionDescriptionChange}
+                />
                 {sectionErrors.VenueDescription && (
-                  <div className="invalid-feedback">{sectionErrors.VenueDescription}</div>
+                  <div style={{ color: "#dc3545", fontSize: ".875em" }}>
+                    {sectionErrors.VenueDescription}
+                  </div>
                 )}
               </div>
               <div className="mb-3">
