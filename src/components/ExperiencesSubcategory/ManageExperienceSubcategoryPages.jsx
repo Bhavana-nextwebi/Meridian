@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
-  deleteExperiencePage,
-  fetchAllExperiencePages,
-} from "../../services/experiencePageServices";
+  deleteExperienceSubcategoryPage,
+  fetchAllExperienceSubcategoryPages,
+} from "../../services/experienceSubcategoryPageServices";
 import TableHeader from "../Common/TableComponent/TableHeader";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -13,16 +13,16 @@ import { handleErrors } from "../../utils/errorHandler";
 import { Pagination } from "../Common/TableComponent/Pagination";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 
-export const ManageExperiencesPages = () => {
+export const ManageExperienceSubcategoryPages = () => {
   const navigate = useNavigate();
   const [entriesPerPage, setEntriesPerPage] = useState(30);
   const [currentPage, setCurrentPage] = useState(1);
-  const [allExperiencePages, setAllExperiencePages] = useState([]);
+  const [allPages, setAllPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchedTerm, setSearchedTerm] = useState("");
   const [pageAccessDetails, setPageAccessDetails] = useState([]);
-  const PageLevelAccessurl = "experience-pages";
+  const PageLevelAccessurl = "manage-experience-subcategory";
   const { pageAccessData } = usePageLevelAccess(PageLevelAccessurl);
   const searchInputRef = useRef(null);
 
@@ -39,37 +39,37 @@ export const ManageExperiencesPages = () => {
   }, [pageAccessData, navigate]);
 
   useEffect(() => {
-    const loadExperiencePages = async () => {
+    const loadPages = async () => {
       setLoading(true);
       try {
-        const result = await fetchAllExperiencePages();
-        setAllExperiencePages(result || []);
+        const result = await fetchAllExperienceSubcategoryPages();
+        setAllPages(result || []);
       } catch (error) {
         handleErrors(error);
       } finally {
         setLoading(false);
       }
     };
-    loadExperiencePages();
+    loadPages();
   }, []);
 
-  const filteredExperiencePages = useMemo(() => {
-    if (!searchedTerm.trim()) return allExperiencePages;
+  const filteredPages = useMemo(() => {
+    if (!searchedTerm.trim()) return allPages;
     const term = searchedTerm.trim().toLowerCase();
-    return allExperiencePages.filter((item) =>
-      [item.title, item.bannerTitle, item.experienceCategoryName]
+    return allPages.filter((item) =>
+      [item.title, item.bannerTitle, item.experienceSubcategoryName]
         .filter(Boolean)
         .some((field) => field.toLowerCase().includes(term))
     );
-  }, [allExperiencePages, searchedTerm]);
+  }, [allPages, searchedTerm]);
 
-  const totalCount = filteredExperiencePages.length;
+  const totalCount = filteredPages.length;
   const totalPages = Math.ceil(totalCount / entriesPerPage) || 1;
 
-  const paginatedExperiencePages = useMemo(() => {
+  const paginatedPages = useMemo(() => {
     const start = (currentPage - 1) * entriesPerPage;
-    return filteredExperiencePages.slice(start, start + entriesPerPage);
-  }, [filteredExperiencePages, currentPage, entriesPerPage]);
+    return filteredPages.slice(start, start + entriesPerPage);
+  }, [filteredPages, currentPage, entriesPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -94,12 +94,16 @@ export const ManageExperiencesPages = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = await confirmDelete("Experience Page");
+    const confirmed = await confirmDelete("Experience Subcategory Page");
     if (confirmed) {
       try {
-        await deleteExperiencePage(id);
-        setAllExperiencePages((prev) => prev.filter((item) => item.id !== id));
-        Swal.fire("Deleted!", "The experience page has been deleted successfully.", "success");
+        await deleteExperienceSubcategoryPage(id);
+        setAllPages((prev) => prev.filter((item) => item.id !== id));
+        Swal.fire(
+          "Deleted!",
+          "The experience subcategory page has been deleted successfully.",
+          "success"
+        );
       } catch (error) {
         handleErrors(error);
       }
@@ -155,10 +159,13 @@ export const ManageExperiencesPages = () => {
           <div className="col-xxl-12">
             <div className="card mt-xxl-n5">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <h5 className="mb-sm-2 mt-sm-2">Manage Experience Pages</h5>
+                <h5 className="mb-sm-2 mt-sm-2">Manage Experience Subcategory Pages</h5>
                 {pageAccessDetails.addAccess && (
-                  <button className="btn btn-secondary" onClick={() => navigate("add")}>
-                    Add Experience Page
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => navigate("/add-experience-subcategory")}
+                  >
+                    Add Experience Subcategory Page
                   </button>
                 )}
               </div>
@@ -212,7 +219,7 @@ export const ManageExperiencesPages = () => {
                       <TableHeader
                         columns={[
                           "#",
-                          "Experience Category",
+                          "Experience Subcategory",
                           "Title",
                           "Banner Title",
                           "Services",
@@ -224,13 +231,13 @@ export const ManageExperiencesPages = () => {
                         ]}
                       />
                       <tbody className="manage-page-group-table-values p-3">
-                        {paginatedExperiencePages.length === 0 ? (
+                        {paginatedPages.length === 0 ? (
                           <TableDataStatusError colspan="10" />
                         ) : (
-                          paginatedExperiencePages.map((item, index) => (
+                          paginatedPages.map((item, index) => (
                             <tr key={item.id}>
                               <td>{(currentPage - 1) * entriesPerPage + index + 1}</td>
-                              <td>{item.experienceCategoryName}</td>
+                              <td>{item.experienceSubcategoryName}</td>
                               <td>{item.title}</td>
                               <td>{item.bannerTitle}</td>
 
@@ -240,7 +247,9 @@ export const ManageExperiencesPages = () => {
                                   className="action-icon-btn action-icon-services"
                                   title="Manage Services"
                                   onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/services`)
+                                    navigate(
+                                      `/manage-experience-subcategory/${item.experienceSubcategoryGuid}/services`
+                                    )
                                   }
                                 >
                                   <i className="ri-service-line"></i>
@@ -253,7 +262,9 @@ export const ManageExperiencesPages = () => {
                                   className="action-icon-btn action-icon-wedding"
                                   title="Manage Gallery Items"
                                   onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/wedding`)
+                                    navigate(
+                                      `/manage-experience-subcategory/${item.experienceSubcategoryGuid}/wedding`
+                                    )
                                   }
                                 >
                                   <i className="ri-heart-3-line"></i>
@@ -266,7 +277,9 @@ export const ManageExperiencesPages = () => {
                                   className="action-icon-btn action-icon-events"
                                   title="Manage Events"
                                   onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/events`)
+                                    navigate(
+                                      `/manage-experience-subcategory/${item.experienceSubcategoryGuid}/events`
+                                    )
                                   }
                                 >
                                   <i className="ri-calendar-event-line"></i>
@@ -279,7 +292,9 @@ export const ManageExperiencesPages = () => {
                                   className="action-icon-btn action-icon-light"
                                   title="Manage Light Sections"
                                   onClick={() =>
-                                    navigate(`/experience-pages/${item.experienceGuid}/light`)
+                                    navigate(
+                                      `/manage-experience-subcategory/${item.experienceSubcategoryGuid}/light`
+                                    )
                                   }
                                 >
                                   <i className="ri-lightbulb-line"></i>
@@ -293,7 +308,7 @@ export const ManageExperiencesPages = () => {
                                   title="Manage Testimonials"
                                   onClick={() =>
                                     navigate(
-                                      `/experience-pages/${item.experienceGuid}/testimonials`
+                                      `/manage-experience-subcategory/${item.experienceSubcategoryGuid}/testimonials`
                                     )
                                   }
                                 >

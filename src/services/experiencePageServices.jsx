@@ -8,8 +8,7 @@ const headers = {
 };
 
 // POST /api/v1/experience-page/add
-// body (multipart/form-data): ExperienceCategoryId, ExperienceCategoryName,
-// ExperienceSubcategoryId, ExperienceSubcategoryName, BannerTitle,
+// body (multipart/form-data): ExperienceCategoryId, ExperienceCategoryName, BannerTitle,
 // BannerImage (file), Title, Description, Image (file), CtaTitle, CtaDescription
 export const addExperiencePage = async (formData) => {
   const response = await axiosInstance.post('experience-page/add', formData, { headers });
@@ -17,8 +16,7 @@ export const addExperiencePage = async (formData) => {
 };
 
 // PUT /api/v1/experience-page/update
-// body (multipart/form-data): Id, ExperienceCategoryId, ExperienceCategoryName,
-// ExperienceSubcategoryId, ExperienceSubcategoryName, BannerTitle,
+// body (multipart/form-data): Id, ExperienceCategoryId, ExperienceCategoryName, BannerTitle,
 // BannerImage (file), Title, Description, Image (file), CtaTitle, CtaDescription
 export const updateExperiencePage = async (formData) => {
   const response = await axiosInstance.put('experience-page/update', formData, { headers });

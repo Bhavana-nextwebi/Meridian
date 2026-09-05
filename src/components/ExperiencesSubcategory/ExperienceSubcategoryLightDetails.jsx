@@ -4,15 +4,15 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
-  addExperienceLight,
-  updateExperienceLight,
-  fetchExperienceLightsByExperienceGuid,
-  deleteExperienceLight,
-} from "../../services/experienceLightServices";
+  addExperienceSubcategoryLight,
+  updateExperienceSubcategoryLight,
+  fetchExperienceSubcategoryLightsByGuid,
+  deleteExperienceSubcategoryLight,
+} from "../../services/experienceSubcategoryLightServices";
 import {
-  fetchExperiencePageByGuid,
-  updateExperiencePage,
-} from "../../services/experiencePageServices";
+  fetchExperienceSubcategoryPageByGuid,
+  updateExperienceSubcategoryPage,
+} from "../../services/experienceSubcategoryPageServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
@@ -40,8 +40,8 @@ const initialSectionFormState = {
   LightsDescription: "",
 };
 
-export const ExperienceLightDetails = () => {
-  const { experienceGuid } = useParams();
+export const ExperienceSubcategoryLightDetails = () => {
+  const { experienceSubcategoryGuid } = useParams();
   const [lightItems, setLightItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(initialFormState);
@@ -51,7 +51,7 @@ export const ExperienceLightDetails = () => {
   const mediaInputRef = useRef(null);
 
   // Page-level "Lights section" content, edited here since individual light
-  // items are displayed alongside it on the experience page.
+  // items are displayed alongside it on the experience subcategory page.
   const [pageRecord, setPageRecord] = useState(null);
   const [sectionFormData, setSectionFormData] = useState(initialSectionFormState);
   const [sectionLoading, setSectionLoading] = useState(true);
@@ -60,7 +60,7 @@ export const ExperienceLightDetails = () => {
   const loadLightItems = async () => {
     setLoading(true);
     try {
-      const result = await fetchExperienceLightsByExperienceGuid(experienceGuid);
+      const result = await fetchExperienceSubcategoryLightsByGuid(experienceSubcategoryGuid);
       setLightItems(result || []);
     } catch (error) {
       handleErrors(error);
@@ -72,7 +72,7 @@ export const ExperienceLightDetails = () => {
   const loadSection = async () => {
     setSectionLoading(true);
     try {
-      const data = await fetchExperiencePageByGuid(experienceGuid);
+      const data = await fetchExperienceSubcategoryPageByGuid(experienceSubcategoryGuid);
       if (data) {
         setPageRecord(data);
         setSectionFormData({
@@ -92,7 +92,7 @@ export const ExperienceLightDetails = () => {
     loadLightItems();
     loadSection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [experienceGuid]);
+  }, [experienceSubcategoryGuid]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -179,11 +179,11 @@ export const ExperienceLightDetails = () => {
 
       if (editingId) {
         payload.append("Id", editingId);
-        await updateExperienceLight(payload);
+        await updateExperienceSubcategoryLight(payload);
         toast.success("Experience light section updated successfully!");
       } else {
-        payload.append("ExperienceGuid", experienceGuid);
-        await addExperienceLight(payload);
+        payload.append("ExperienceSubcategoryGuid", experienceSubcategoryGuid);
+        await addExperienceSubcategoryLight(payload);
         toast.success("Experience light section added successfully!");
       }
       resetForm();
@@ -220,7 +220,7 @@ export const ExperienceLightDetails = () => {
     const confirmed = await confirmDelete("Light Section");
     if (confirmed) {
       try {
-        await deleteExperienceLight(id);
+        await deleteExperienceSubcategoryLight(id);
         setLightItems((prev) => prev.filter((item) => item.id !== id));
         Swal.fire("Deleted!", "The light section has been deleted successfully.", "success");
       } catch (error) {
@@ -248,8 +248,7 @@ export const ExperienceLightDetails = () => {
     try {
       const payload = new FormData();
       payload.append("Id", pageRecord.id);
-      payload.append("ExperienceCategoryId", pageRecord.experienceCategoryId);
-      payload.append("ExperienceCategoryName", pageRecord.experienceCategoryName || "");
+      payload.append("ExperienceSubcategoryName", pageRecord.experienceSubcategoryName || "");
       payload.append("BannerTitle", pageRecord.bannerTitle || "");
       payload.append("Title", pageRecord.title || "");
       payload.append("Description", pageRecord.description || "");
@@ -262,7 +261,7 @@ export const ExperienceLightDetails = () => {
       payload.append("MetaKeys", pageRecord.metaKeys || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
 
-      await updateExperiencePage(payload);
+      await updateExperienceSubcategoryPage(payload);
       toast.success("Lights section updated successfully!");
       loadSection();
     } catch (error) {
@@ -279,7 +278,7 @@ export const ExperienceLightDetails = () => {
       <div className="row">
         <div className="col-12">
           <div className="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 className="mb-sm-0">Manage Experience Light Sections</h4>
+            <h4 className="mb-sm-0">Manage Experience Subcategory Light Sections</h4>
             <div className="page-title-right">
               <ol className="breadcrumb m-0">
                 <li className="breadcrumb-item">
@@ -288,7 +287,7 @@ export const ExperienceLightDetails = () => {
                   </Link>
                 </li>
                 <li className="breadcrumb-item">
-                  <Link to="/experience-pages">Manage Experience Pages</Link>
+                  <Link to="/manage-experience-subcategory">Manage Experience Subcategory Pages</Link>
                 </li>
                 <li className="breadcrumb-item">Light</li>
               </ol>

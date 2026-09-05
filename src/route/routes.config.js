@@ -54,6 +54,13 @@ import { ExperiencesLightPage } from "../pages/ExperiencesLightPage";
 import { ExperiencesWeddingPage } from "../pages/ExperiencesWeddingPage";
 import { ExperienceCategory } from "../pages/ExperienceCategory";
 import { ExperienceSubcategory } from "../pages/ExperienceSubcategory";
+import { ExperienceSubcategoryPagesManage } from "../pages/ExperienceSubcategoryPagesManage";
+import { ExperienceSubcategoryPagesAdd } from "../pages/ExperienceSubcategoryPagesAdd";
+import { ExperienceSubcategoryPagesServicePage } from "../pages/ExperienceSubcategoryPagesServicePage";
+import { ExperienceSubcategoryPagesTestimonialsPage } from "../pages/ExperienceSubcategoryPagesTestimonialsPage";
+import { ExperienceSubcategoryPagesEventPage } from "../pages/ExperienceSubcategoryPagesEventPage";
+import { ExperienceSubcategoryPagesLightPage } from "../pages/ExperienceSubcategoryPagesLightPage";
+import { ExperienceSubcategoryPagesWeddingPage } from "../pages/ExperienceSubcategoryPagesWeddingPage";
 
 import { VenueCategory } from "../pages/VenueCategory";
 import { VenueSubcategory } from "../pages/VenueSubcategory";
@@ -169,6 +176,19 @@ const routes = [
           { path: ":experienceGuid/events", element: <ExperiencesEventPage /> },
           { path: ":experienceGuid/light", element: <ExperiencesLightPage /> },
           { path: ":experienceGuid/wedding", element: <ExperiencesWeddingPage /> },
+        ],
+      },
+      { path: "manage-experience-subcategory", element: <ExperienceSubcategoryPagesManage /> },
+      { path: "add-experience-subcategory", element: <ExperienceSubcategoryPagesAdd /> },
+      {
+        path: "manage-experience-subcategory",
+        children: [
+          { path: "update/:id", element: <ExperienceSubcategoryPagesAdd /> },
+          { path: ":experienceSubcategoryGuid/services", element: <ExperienceSubcategoryPagesServicePage /> },
+          { path: ":experienceSubcategoryGuid/testimonials", element: <ExperienceSubcategoryPagesTestimonialsPage /> },
+          { path: ":experienceSubcategoryGuid/events", element: <ExperienceSubcategoryPagesEventPage /> },
+          { path: ":experienceSubcategoryGuid/light", element: <ExperienceSubcategoryPagesLightPage /> },
+          { path: ":experienceSubcategoryGuid/wedding", element: <ExperienceSubcategoryPagesWeddingPage /> },
         ],
       },
     {path:"venue-pages",element:<VenuePageManage/>},

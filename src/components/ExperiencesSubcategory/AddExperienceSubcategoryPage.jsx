@@ -5,11 +5,12 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 
 import { Editor } from "@tinymce/tinymce-react";
 import {
-  fetchExperiencePageById,
-  addExperiencePage,
-  updateExperiencePage,
-} from "../../services/experiencePageServices";
+  fetchExperienceSubcategoryPageById,
+  addExperienceSubcategoryPage,
+  updateExperienceSubcategoryPage,
+} from "../../services/experienceSubcategoryPageServices";
 import { fetchExperienceCategories } from "../../services/experienceCategoryServices";
+import { fetchExperienceSubcategories } from "../../services/experienceSubcategoryServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
@@ -17,17 +18,13 @@ import { getFullImageUrl } from "../../utils/imageUrl";
 import { getTinyMceInit } from "../../utils/tinymceConfig";
 
 // CtaTitle/CtaDescription, LightsTitle/LightsSubTitle/LightsDescription,
-// WeddingSectionTitle (edited as "Gallery Title" on the Wedding screen), and
-// SectionNeedsTitle (edited as "Service Needs Title" on the Services screen)
-// are still part of formData (and still sent on submit) but are no longer
-// editable from this form - they're managed from the Events, Light, Wedding,
-// and Services screens instead, keyed by the page's own experienceGuid. On
-// create there's nothing fetched yet so they naturally go up empty; on
-// update the values fetched below are carried through unchanged since
-// nothing here touches them.
+// WeddingSectionTitle, and SectionNeedsTitle are still part of formData
+// (and still sent on submit) but are managed from the Events, Light,
+// Wedding, and Services screens instead.
 const initialFormState = {
   ExperienceCategoryId: "",
-  ExperienceCategoryName: "",
+  ExperienceSubcategoryId: "",
+  ExperienceSubcategoryName: "",
   BannerTitle: "",
   BannerImage: "",
   Title: "",
@@ -45,16 +42,13 @@ const initialFormState = {
   MetaDesc: "",
 };
 
-// TinyMCE's "empty" state is still markup like "<p><br></p>", not "" - a
-// plain .trim() check on the HTML would treat that as non-empty, so strip
-// tags first when deciding whether Description was actually filled in.
 const isRichTextEmpty = (html) => {
   if (!html) return true;
   const stripped = html.replace(/<[^>]*>/g, "").trim();
   return stripped.length === 0;
 };
 
-export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setEditMode }) => {
+export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPageGroup, setEditMode }) => {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -63,14 +57,15 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
   const [loading, setLoading] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [experienceCategories, setExperienceCategories] = useState([]);
-  const [experienceGuid, setExperienceGuid] = useState(null);
+  const [allExperienceSubcategories, setAllExperienceSubcategories] = useState([]);
+  const [experienceSubcategoryGuid, setExperienceSubcategoryGuid] = useState(null);
   const [PageLevelAccessurl, setPageLevelAccessurl] = useState();
 
   useEffect(() => {
     if (id) {
-      setPageLevelAccessurl("/experience-pages/update/:id");
+      setPageLevelAccessurl("/manage-experience-subcategory/update/:id");
     } else {
-      setPageLevelAccessurl("experience-pages/add");
+      setPageLevelAccessurl("add-experience-subcategory");
     }
   }, [id]);
 
@@ -82,10 +77,8 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
         if (!pageAccessData.editAccess) {
           navigate("/404-error-page");
         }
-      } else {
-        if (!pageAccessData.addAccess) {
-          navigate("/404-error-page");
-        }
+      } else if (!pageAccessData.addAccess) {
+        navigate("/404-error-page");
       }
     } else {
       console.log("No page access details found");
@@ -93,53 +86,64 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
   });
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadLookups = async () => {
       try {
-        const categories = await fetchExperienceCategories();
+        const [categories, subcategories] = await Promise.all([
+          fetchExperienceCategories(),
+          fetchExperienceSubcategories(),
+        ]);
         setExperienceCategories(categories || []);
+        setAllExperienceSubcategories(subcategories || []);
       } catch (error) {
         handleErrors(error);
       }
     };
-    loadCategories();
+    loadLookups();
   }, []);
+
+  const experienceSubcategories = formData.ExperienceCategoryId
+    ? allExperienceSubcategories.filter(
+        (subcategory) =>
+          String(subcategory.experienceCategoryId) === String(formData.ExperienceCategoryId)
+      )
+    : allExperienceSubcategories;
 
   useEffect(() => {
     const fetchData = async () => {
-      if (id) {
-        try {
-          const data = await fetchExperiencePageById(id);
-          if (data) {
-            setFormData({
-              ExperienceCategoryId: data.experienceCategoryId ?? "",
-              ExperienceCategoryName: data.experienceCategoryName || "",
-              BannerTitle: data.bannerTitle || "",
-              BannerImage: "",
-              BannerImagePreview: getFullImageUrl(data.bannerImage),
-              Title: data.title || "",
-              Description: data.description || "",
-              Image: "",
-              ImagePreview: getFullImageUrl(data.image),
-              // Carried through untouched - see note above initialFormState.
-              CtaTitle: data.ctaTitle || "",
-              CtaDescription: data.ctaDescription || "",
-              LightsTitle: data.lightsTitle || "",
-              LightsSubTitle: data.lightsSubTitle || "",
-              LightsDescription: data.lightsDescription || "",
-              SectionNeedsTitle: data.sectionNeedsTitle || "",
-              WeddingSectionTitle: data.weddingSectionTitle || "",
-              PageTitle: data.pageTitle || "",
-              MetaKeys: data.metaKeys || "",
-              MetaDesc: data.metaDesc || "",
-            });
-            setExperienceGuid(data.experienceGuid || null);
-          }
-        } catch (error) {
-          handleErrors(error);
-        }
-      } else {
+      if (!id) {
         setFormData(initialFormState);
-        setExperienceGuid(null);
+        setExperienceSubcategoryGuid(null);
+        return;
+      }
+      try {
+        const data = await fetchExperienceSubcategoryPageById(id);
+        if (data) {
+          setFormData({
+            ExperienceCategoryId: "",
+            ExperienceSubcategoryId: data.experienceSubcategoryId ?? "",
+            ExperienceSubcategoryName: data.experienceSubcategoryName || "",
+            BannerTitle: data.bannerTitle || "",
+            BannerImage: "",
+            BannerImagePreview: getFullImageUrl(data.bannerImage),
+            Title: data.title || "",
+            Description: data.description || "",
+            Image: "",
+            ImagePreview: getFullImageUrl(data.image),
+            CtaTitle: data.ctaTitle || "",
+            CtaDescription: data.ctaDescription || "",
+            LightsTitle: data.lightsTitle || "",
+            LightsSubTitle: data.lightsSubTitle || "",
+            LightsDescription: data.lightsDescription || "",
+            SectionNeedsTitle: data.sectionNeedsTitle || "",
+            WeddingSectionTitle: data.weddingSectionTitle || "",
+            PageTitle: data.pageTitle || "",
+            MetaKeys: data.metaKeys || "",
+            MetaDesc: data.metaDesc || "",
+          });
+          setExperienceSubcategoryGuid(data.experienceSubcategoryGuid || null);
+        }
+      } catch (error) {
+        handleErrors(error);
       }
     };
 
@@ -147,19 +151,39 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  useEffect(() => {
+    if (!id || !formData.ExperienceSubcategoryId || formData.ExperienceCategoryId) return;
+    const matchingSubcategory = allExperienceSubcategories.find(
+      (subcategory) => String(subcategory.id) === String(formData.ExperienceSubcategoryId)
+    );
+    if (matchingSubcategory) {
+      setFormData((prevData) => ({
+        ...prevData,
+        ExperienceCategoryId: matchingSubcategory.experienceCategoryId,
+      }));
+    }
+  }, [id, allExperienceSubcategories, formData.ExperienceSubcategoryId, formData.ExperienceCategoryId]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "ExperienceCategoryId") {
-      // Keep ExperienceCategoryName in sync with the selected category so the
-      // API always receives both the id and a matching denormalized name.
-      const selectedCategory = experienceCategories.find(
-        (category) => String(category.id) === String(value)
-      );
       setFormData((prevData) => ({
         ...prevData,
         ExperienceCategoryId: value,
-        ExperienceCategoryName: selectedCategory ? selectedCategory.experienceCategoryName : "",
+        ExperienceSubcategoryId: "",
+        ExperienceSubcategoryName: "",
+      }));
+    } else if (name === "ExperienceSubcategoryId") {
+      const selectedSubcategory = experienceSubcategories.find(
+        (subcategory) => String(subcategory.id) === String(value)
+      );
+      setFormData((prevData) => ({
+        ...prevData,
+        ExperienceSubcategoryId: value,
+        ExperienceSubcategoryName: selectedSubcategory
+          ? selectedSubcategory.experienceSubcategoryName
+          : "",
       }));
     } else {
       setFormData((prevData) => ({ ...prevData, [name]: value }));
@@ -168,9 +192,6 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
     setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
-  // TinyMCE's onEditorChange hands back the HTML string directly (not an
-  // input event), so Description gets its own handler rather than going
-  // through handleInputChange.
   const handleDescriptionChange = (content) => {
     setFormData((prevData) => ({ ...prevData, Description: content }));
     setErrors((prevErrors) => ({ ...prevErrors, Description: "" }));
@@ -192,8 +213,8 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
     const newErrors = {};
     let valid = true;
 
-    if (!formData.ExperienceCategoryId) {
-      newErrors.ExperienceCategoryId = "Experience Category is required";
+    if (!id && !formData.ExperienceSubcategoryId) {
+      newErrors.ExperienceSubcategoryId = "Experience Subcategory is required";
       valid = false;
     }
     if (!formData.BannerTitle?.trim()) {
@@ -215,13 +236,13 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
 
   const buildSubmissionPayload = () => {
     const payload = new FormData();
-    payload.append("ExperienceCategoryId", formData.ExperienceCategoryId);
-    payload.append("ExperienceCategoryName", formData.ExperienceCategoryName);
+    if (!id) {
+      payload.append("ExperienceSubcategoryId", formData.ExperienceSubcategoryId);
+    }
+    payload.append("ExperienceSubcategoryName", formData.ExperienceSubcategoryName);
     payload.append("BannerTitle", formData.BannerTitle);
     payload.append("Title", formData.Title);
     payload.append("Description", formData.Description);
-    // Passed through as-is: empty on create, whatever was last saved (via
-    // the Events/Light/Wedding/Services screens) on update.
     payload.append("CtaTitle", formData.CtaTitle);
     payload.append("CtaDescription", formData.CtaDescription);
     payload.append("LightsTitle", formData.LightsTitle);
@@ -260,14 +281,14 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
     try {
       const payload = buildSubmissionPayload();
       if (id) {
-        await updateExperiencePage(payload);
-        toast.success("Experience Page updated successfully!");
+        await updateExperienceSubcategoryPage(payload);
+        toast.success("Experience Subcategory Page updated successfully!");
         resetForm();
-        navigate("/experience-pages");
+        navigate("/manage-experience-subcategory");
       } else {
-        await addExperiencePage(payload);
+        await addExperienceSubcategoryPage(payload);
         toast.success(
-          "Experience Page added! Add Call To Action and Lights section content from the manage screens next."
+          "Experience Subcategory Page added! Add Call To Action and Lights section content from the manage screens next."
         );
         resetForm();
       }
@@ -291,7 +312,9 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
       <div className="row">
         <div className="col-12">
           <div className="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 className="mb-sm-0">{id ? "Experience Page Details" : "Add Experience Page"}</h4>
+            <h4 className="mb-sm-0">
+              {id ? "Experience Subcategory Page Details" : "Add Experience Subcategory Page"}
+            </h4>
             <div className="page-title-right">
               <ol className="breadcrumb m-0">
                 <li className="breadcrumb-item">
@@ -300,7 +323,7 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                   </Link>
                 </li>
                 <li className="breadcrumb-item">
-                  <Link to="/experience-pages">Manage Experience Pages</Link>
+                  <Link to="/manage-experience-subcategory">Manage Experience Subcategory Pages</Link>
                 </li>
                 <li className="breadcrumb-item">{id ? `Update-${id}` : "Add"}</li>
               </ol>
@@ -315,34 +338,52 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
             <div className="col-lg-8">
               <div className="card mt-xxl-n5 p-3">
                 <div className="card-header-wrapper p-1">
-                  <h5 className="blogs-heading">Experience Page Details</h5>
+                  <h5 className="blogs-heading">Experience Subcategory Page Details</h5>
                 </div>
                 <div className="mt-3">
                   <div className="row">
-                    <div className="mb-3 col-lg-6">
-                      <label className="form-label">
-                        Experience Category <span className="required-field">*</span>
-                      </label>
+                    <div className="mb-3 col-lg-4">
+                      <label className="form-label">Experience Category</label>
                       <select
                         name="ExperienceCategoryId"
                         value={formData.ExperienceCategoryId}
                         onChange={handleInputChange}
-                        className={`form-select ${
-                          errors.ExperienceCategoryId ? "is-invalid" : ""
-                        }`}
+                        disabled={!!id}
+                        className="form-select"
                       >
-                        <option value="">Select Experience Category</option>
+                        <option value="">All Categories</option>
                         {experienceCategories.map((category) => (
                           <option key={category.id} value={category.id}>
                             {category.experienceCategoryName}
                           </option>
                         ))}
                       </select>
-                      {errors.ExperienceCategoryId && (
-                        <div className="invalid-feedback">{errors.ExperienceCategoryId}</div>
+                    </div>
+                    <div className="mb-3 col-lg-4">
+                      <label className="form-label">
+                        Experience Subcategory <span className="required-field">*</span>
+                      </label>
+                      <select
+                        name="ExperienceSubcategoryId"
+                        value={formData.ExperienceSubcategoryId}
+                        onChange={handleInputChange}
+                        disabled={!!id}
+                        className={`form-select ${
+                          errors.ExperienceSubcategoryId ? "is-invalid" : ""
+                        }`}
+                      >
+                        <option value="">Select Experience Subcategory</option>
+                        {experienceSubcategories.map((subcategory) => (
+                          <option key={subcategory.id} value={subcategory.id}>
+                            {subcategory.experienceSubcategoryName}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.ExperienceSubcategoryId && (
+                        <div className="invalid-feedback">{errors.ExperienceSubcategoryId}</div>
                       )}
                     </div>
-                    <div className="mb-3 col-lg-6">
+                    <div className="mb-3 col-lg-4">
                       <label className="form-label">
                         Banner Title <span className="required-field">*</span>
                       </label>
@@ -369,13 +410,13 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                       />
                       <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
                         <input
-                          id="bannerImage"
+                          id="escpBannerImage"
                           type="file"
                           accept="image/*"
                           className="profile-img-file-input"
                           onChange={(e) => handleImageChange(e, "BannerImage")}
                         />
-                        <label htmlFor="bannerImage" className="profile-photo-edit avatar-xs">
+                        <label htmlFor="escpBannerImage" className="profile-photo-edit avatar-xs">
                           <span className="avatar-title rounded-circle bg-light text-body shadow">
                             <i className="ri-camera-fill"></i>
                           </span>
@@ -439,13 +480,13 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                       />
                       <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
                         <input
-                          id="mainImage"
+                          id="escpMainImage"
                           type="file"
                           accept="image/*"
                           className="profile-img-file-input"
                           onChange={(e) => handleImageChange(e, "Image")}
                         />
-                        <label htmlFor="mainImage" className="profile-photo-edit avatar-xs">
+                        <label htmlFor="escpMainImage" className="profile-photo-edit avatar-xs">
                           <span className="avatar-title rounded-circle bg-light text-body shadow">
                             <i className="ri-camera-fill"></i>
                           </span>
@@ -474,26 +515,32 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                       managed from the Wedding screen, and Service Needs Title is managed
                       from the Services screen for this page.
                     </p>
-                    {experienceGuid ? (
+                    {experienceSubcategoryGuid ? (
                       <div className="d-flex flex-wrap gap-2">
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-secondary"
-                          onClick={() => navigate(`/experience-pages/${experienceGuid}/events`)}
+                          onClick={() =>
+                            navigate(`/manage-experience-subcategory/${experienceSubcategoryGuid}/events`)
+                          }
                         >
                           Manage Call To Action &amp; Events
                         </button>
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-secondary"
-                          onClick={() => navigate(`/experience-pages/${experienceGuid}/light`)}
+                          onClick={() =>
+                            navigate(`/manage-experience-subcategory/${experienceSubcategoryGuid}/light`)
+                          }
                         >
                           Manage Lights Section &amp; Light Items
                         </button>
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-secondary"
-                          onClick={() => navigate(`/experience-pages/${experienceGuid}/services`)}
+                          onClick={() =>
+                            navigate(`/manage-experience-subcategory/${experienceSubcategoryGuid}/services`)
+                          }
                         >
                           Manage Services
                         </button>
@@ -501,7 +548,7 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                           type="button"
                           className="btn btn-sm btn-outline-secondary"
                           onClick={() =>
-                            navigate(`/experience-pages/${experienceGuid}/testimonials`)
+                            navigate(`/manage-experience-subcategory/${experienceSubcategoryGuid}/testimonials`)
                           }
                         >
                           Manage Testimonials
@@ -509,7 +556,9 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-secondary"
-                          onClick={() => navigate(`/experience-pages/${experienceGuid}/wedding`)}
+                          onClick={() =>
+                            navigate(`/manage-experience-subcategory/${experienceSubcategoryGuid}/wedding`)
+                          }
                         >
                           Manage Wedding Items
                         </button>

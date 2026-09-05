@@ -4,15 +4,15 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
-  addExperienceWedding,
-  updateExperienceWedding,
-  fetchExperienceWeddingsByExperienceGuid,
-  deleteExperienceWedding,
-} from "../../services/experienceWeddingServices";
+  addExperienceSubcategoryService,
+  updateExperienceSubcategoryService,
+  fetchExperienceSubcategoryServicesByGuid,
+  deleteExperienceSubcategoryService,
+} from "../../services/experienceSubcategoryServiceServices";
 import {
-  fetchExperiencePageByGuid,
-  updateExperiencePage,
-} from "../../services/experiencePageServices";
+  fetchExperienceSubcategoryPageByGuid,
+  updateExperienceSubcategoryPage,
+} from "../../services/experienceSubcategoryPageServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
@@ -22,36 +22,37 @@ import TableHeader from "../Common/TableComponent/TableHeader";
 import { getFullImageUrl } from "../../utils/imageUrl";
 
 const initialFormState = {
-  Title: "",
-  Image: "",
-  ImagePreview: "",
+  ServiceTitle: "",
+  ServiceDesc: "",
+  ServiceIcon: "",
+  ServiceIconPreview: "",
   DisplayOrder: "",
 };
 
-export const ExperienceWeddingDetails = () => {
-  const { experienceGuid } = useParams();
-  const [weddingItems, setWeddingItems] = useState([]);
+export const ExperienceSubcategoryServiceDetails = () => {
+  const { experienceSubcategoryGuid } = useParams();
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState(initialFormState);
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const weddingImageInputRef = useRef(null);
+  const serviceIconInputRef = useRef(null);
 
-  // WeddingSectionTitle ("Gallery Title") lives on the main experience page
-  // record, not on individual wedding items, so it's edited here separately
-  // via a full fetch/update of the experience page keyed by experienceGuid.
+  // SectionNeedsTitle ("Service Needs Title") lives on the main experience
+  // page record, not on individual services, so it's edited here separately
+  // via a full fetch/update of the experience subcategory page keyed by experienceSubcategoryGuid.
   const [experiencePageRecord, setExperiencePageRecord] = useState(null);
-  const [galleryTitle, setGalleryTitle] = useState("");
-  const [galleryTitleLoading, setGalleryTitleLoading] = useState(true);
-  const [isSavingGalleryTitle, setIsSavingGalleryTitle] = useState(false);
-  const [galleryTitleError, setGalleryTitleError] = useState("");
+  const [serviceNeedsTitle, setServiceNeedsTitle] = useState("");
+  const [serviceNeedsTitleLoading, setServiceNeedsTitleLoading] = useState(true);
+  const [isSavingServiceNeedsTitle, setIsSavingServiceNeedsTitle] = useState(false);
+  const [serviceNeedsTitleError, setServiceNeedsTitleError] = useState("");
 
-  const loadWeddingItems = async () => {
+  const loadServices = async () => {
     setLoading(true);
     try {
-      const result = await fetchExperienceWeddingsByExperienceGuid(experienceGuid);
-      setWeddingItems(result || []);
+      const result = await fetchExperienceSubcategoryServicesByGuid(experienceSubcategoryGuid);
+      setServices(result || []);
     } catch (error) {
       handleErrors(error);
     } finally {
@@ -59,26 +60,26 @@ export const ExperienceWeddingDetails = () => {
     }
   };
 
-  const loadGalleryTitle = async () => {
-    setGalleryTitleLoading(true);
+  const loadServiceNeedsTitle = async () => {
+    setServiceNeedsTitleLoading(true);
     try {
-      const data = await fetchExperiencePageByGuid(experienceGuid);
+      const data = await fetchExperienceSubcategoryPageByGuid(experienceSubcategoryGuid);
       if (data) {
         setExperiencePageRecord(data);
-        setGalleryTitle(data.weddingSectionTitle || "");
+        setServiceNeedsTitle(data.sectionNeedsTitle || "");
       }
     } catch (error) {
       handleErrors(error);
     } finally {
-      setGalleryTitleLoading(false);
+      setServiceNeedsTitleLoading(false);
     }
   };
 
   useEffect(() => {
-    loadWeddingItems();
-    loadGalleryTitle();
+    loadServices();
+    loadServiceNeedsTitle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [experienceGuid]);
+  }, [experienceSubcategoryGuid]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -91,23 +92,27 @@ export const ExperienceWeddingDetails = () => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleImageChange = (e) => {
+  const handleIconChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setFormData((prev) => ({
       ...prev,
-      Image: file,
-      ImagePreview: URL.createObjectURL(file),
+      ServiceIcon: file,
+      ServiceIconPreview: URL.createObjectURL(file),
     }));
-    setErrors((prev) => ({ ...prev, Image: "" }));
+    setErrors((prev) => ({ ...prev, ServiceIcon: "" }));
   };
 
   const validate = () => {
     const newErrors = {};
     let valid = true;
-    if (!formData.Title?.trim()) {
-      newErrors.Title = "Title is required";
+    if (!formData.ServiceTitle?.trim()) {
+      newErrors.ServiceTitle = "Service Title is required";
+      valid = false;
+    }
+    if (!formData.ServiceDesc?.trim()) {
+      newErrors.ServiceDesc = "Service Description is required";
       valid = false;
     }
     setErrors(newErrors);
@@ -120,8 +125,8 @@ export const ExperienceWeddingDetails = () => {
     setErrors({});
     // File inputs are uncontrolled - clearing formData alone doesn't clear
     // the browser's displayed "chosen file" label, so reset it explicitly.
-    if (weddingImageInputRef.current) {
-      weddingImageInputRef.current.value = "";
+    if (serviceIconInputRef.current) {
+      serviceIconInputRef.current.value = "";
     }
   };
 
@@ -134,23 +139,24 @@ export const ExperienceWeddingDetails = () => {
     setIsSaving(true);
     try {
       const payload = new FormData();
-      payload.append("Title", formData.Title);
+      payload.append("ServiceTitle", formData.ServiceTitle);
+      payload.append("ServiceDesc", formData.ServiceDesc);
       payload.append("DisplayOrder", toNumber(formData.DisplayOrder));
-      if (formData.Image) {
-        payload.append("Image", formData.Image);
+      if (formData.ServiceIcon) {
+        payload.append("ServiceIcon", formData.ServiceIcon);
       }
 
       if (editingId) {
         payload.append("Id", editingId);
-        await updateExperienceWedding(payload);
-        toast.success("Experience wedding item updated successfully!");
+        await updateExperienceSubcategoryService(payload);
+        toast.success("Experience service updated successfully!");
       } else {
-        payload.append("ExperienceGuid", experienceGuid);
-        await addExperienceWedding(payload);
-        toast.success("Experience wedding item added successfully!");
+        payload.append("ExperienceSubcategoryGuid", experienceSubcategoryGuid);
+        await addExperienceSubcategoryService(payload);
+        toast.success("Experience service added successfully!");
       }
       resetForm();
-      loadWeddingItems();
+      loadServices();
     } catch (error) {
       handleErrors(error);
     } finally {
@@ -161,9 +167,10 @@ export const ExperienceWeddingDetails = () => {
   const handleEdit = (item) => {
     setEditingId(item.id);
     setFormData({
-      Title: item.title || "",
-      Image: "",
-      ImagePreview: getFullImageUrl(item.image),
+      ServiceTitle: item.serviceTitle || "",
+      ServiceDesc: item.serviceDesc || "",
+      ServiceIcon: "",
+      ServiceIconPreview: getFullImageUrl(item.serviceIcon),
       DisplayOrder:
         item.displayOrder === null || item.displayOrder === undefined
           ? ""
@@ -171,48 +178,47 @@ export const ExperienceWeddingDetails = () => {
     });
     // A new file hasn't been chosen for this edit yet, so clear any
     // leftover selection from a previous add/edit in the same input.
-    if (weddingImageInputRef.current) {
-      weddingImageInputRef.current.value = "";
+    if (serviceIconInputRef.current) {
+      serviceIconInputRef.current.value = "";
     }
   };
 
   const handleDelete = async (id) => {
-    const confirmed = await confirmDelete("Wedding Item");
+    const confirmed = await confirmDelete("Experience Subcategory Service");
     if (confirmed) {
       try {
-        await deleteExperienceWedding(id);
-        setWeddingItems((prev) => prev.filter((item) => item.id !== id));
-        Swal.fire("Deleted!", "The wedding item has been deleted successfully.", "success");
+        await deleteExperienceSubcategoryService(id);
+        setServices((prev) => prev.filter((item) => item.id !== id));
+        Swal.fire("Deleted!", "The experience subcategory service has been deleted successfully.", "success");
       } catch (error) {
         handleErrors(error);
       }
     }
   };
 
-  const handleGalleryTitleChange = (e) => {
-    setGalleryTitle(e.target.value);
-    setGalleryTitleError("");
+  const handleServiceNeedsTitleChange = (e) => {
+    setServiceNeedsTitle(e.target.value);
+    setServiceNeedsTitleError("");
   };
 
-  // Updates the main experience page record. Since the update endpoint takes
+  // Updates the main experience subcategory page record. Since the update endpoint takes
   // the full payload, everything from the last-fetched record is carried
-  // through unchanged except WeddingSectionTitle; images are only re-sent if
+  // through unchanged except SectionNeedsTitle; images are only re-sent if
   // this screen ever lets you change them (it doesn't), so they're omitted.
-  const handleGalleryTitleSubmit = async (e) => {
+  const handleServiceNeedsTitleSubmit = async (e) => {
     e.preventDefault();
     if (!experiencePageRecord) return;
-    if (!galleryTitle?.trim()) {
-      setGalleryTitleError("Gallery Title is required");
+    if (!serviceNeedsTitle?.trim()) {
+      setServiceNeedsTitleError("Service Needs Title is required");
       return;
     }
 
-    setIsSavingGalleryTitle(true);
+    setIsSavingServiceNeedsTitle(true);
     try {
       const record = experiencePageRecord;
       const payload = new FormData();
       payload.append("Id", record.id);
-      payload.append("ExperienceCategoryId", record.experienceCategoryId ?? "");
-      payload.append("ExperienceCategoryName", record.experienceCategoryName || "");
+      payload.append("ExperienceSubcategoryName", record.experienceSubcategoryName || "");
       payload.append("BannerTitle", record.bannerTitle || "");
       payload.append("Title", record.title || "");
       payload.append("Description", record.description || "");
@@ -221,19 +227,19 @@ export const ExperienceWeddingDetails = () => {
       payload.append("LightsTitle", record.lightsTitle || "");
       payload.append("LightsSubTitle", record.lightsSubTitle || "");
       payload.append("LightsDescription", record.lightsDescription || "");
-      payload.append("SectionNeedsTitle", record.sectionNeedsTitle || "");
-      payload.append("WeddingSectionTitle", galleryTitle);
+      payload.append("SectionNeedsTitle", serviceNeedsTitle);
+      payload.append("WeddingSectionTitle", record.weddingSectionTitle || "");
       payload.append("PageTitle", record.pageTitle || "");
       payload.append("MetaKeys", record.metaKeys || "");
       payload.append("MetaDesc", record.metaDesc || "");
 
-      await updateExperiencePage(payload);
-      toast.success("Gallery Title updated successfully!");
-      loadGalleryTitle();
+      await updateExperienceSubcategoryPage(payload);
+      toast.success("Service Needs Title updated successfully!");
+      loadServiceNeedsTitle();
     } catch (error) {
       handleErrors(error);
     } finally {
-      setIsSavingGalleryTitle(false);
+      setIsSavingServiceNeedsTitle(false);
     }
   };
 
@@ -242,7 +248,7 @@ export const ExperienceWeddingDetails = () => {
       <div className="row">
         <div className="col-12">
           <div className="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 className="mb-sm-0">Manage Experience Wedding Items</h4>
+            <h4 className="mb-sm-0">Manage Experience Subcategory Services</h4>
             <div className="page-title-right">
               <ol className="breadcrumb m-0">
                 <li className="breadcrumb-item">
@@ -251,9 +257,9 @@ export const ExperienceWeddingDetails = () => {
                   </Link>
                 </li>
                 <li className="breadcrumb-item">
-                  <Link to="/experience-pages">Manage Experience Pages</Link>
+                  <Link to="/manage-experience-subcategory">Manage Experience Subcategory Pages</Link>
                 </li>
-                <li className="breadcrumb-item">Wedding</li>
+                <li className="breadcrumb-item">Services</li>
               </ol>
             </div>
           </div>
@@ -262,27 +268,33 @@ export const ExperienceWeddingDetails = () => {
 
       <div className="card mt-xxl-n5 p-3">
         <div className="card-header-wrapper p-1">
-          <h5 className="blogs-heading">Gallery Title</h5>
+          <h5 className="blogs-heading">Service Needs Title</h5>
         </div>
-        {galleryTitleLoading ? (
+        {serviceNeedsTitleLoading ? (
           <Loading />
         ) : (
-          <form onSubmit={handleGalleryTitleSubmit} className="mt-3">
+          <form onSubmit={handleServiceNeedsTitleSubmit} className="mt-3">
             <div className="mb-3">
               <label className="form-label">
-                Gallery Title <span className="required-field">*</span>
+                Service Needs Title <span className="required-field">*</span>
               </label>
               <input
                 type="text"
-                value={galleryTitle}
-                placeholder="Enter Gallery Title"
-                onChange={handleGalleryTitleChange}
-                className={`form-control ${galleryTitleError ? "is-invalid" : ""}`}
+                value={serviceNeedsTitle}
+                placeholder="Enter Service Needs Title"
+                onChange={handleServiceNeedsTitleChange}
+                className={`form-control ${serviceNeedsTitleError ? "is-invalid" : ""}`}
               />
-              {galleryTitleError && <div className="invalid-feedback">{galleryTitleError}</div>}
+              {serviceNeedsTitleError && (
+                <div className="invalid-feedback">{serviceNeedsTitleError}</div>
+              )}
             </div>
-            <button type="submit" className="btn btn-secondary" disabled={isSavingGalleryTitle}>
-              {isSavingGalleryTitle ? "Saving" : "Save Gallery Title"}
+            <button
+              type="submit"
+              className="btn btn-secondary"
+              disabled={isSavingServiceNeedsTitle}
+            >
+              {isSavingServiceNeedsTitle ? "Saving" : "Save Service Needs Title"}
             </button>
           </form>
         )}
@@ -291,24 +303,26 @@ export const ExperienceWeddingDetails = () => {
       <div className="card mt-3 p-3">
         <div className="card-header-wrapper p-1">
           <h5 className="blogs-heading">
-            {editingId ? "Edit Wedding Item" : "Add Wedding Item"}
+            {editingId ? "Edit Experience Subcategory Service" : "Add Experience Subcategory Service"}
           </h5>
         </div>
         <form onSubmit={handleSubmit} className="mt-3">
           <div className="row">
             <div className="mb-3 col-lg-8">
               <label className="form-label">
-                Title <span className="required-field">*</span>
+                Service Title <span className="required-field">*</span>
               </label>
               <input
                 type="text"
-                name="Title"
-                value={formData.Title}
-                placeholder="Enter Title"
+                name="ServiceTitle"
+                value={formData.ServiceTitle}
+                placeholder="Enter Service Title"
                 onChange={handleInputChange}
-                className={`form-control ${errors.Title ? "is-invalid" : ""}`}
+                className={`form-control ${errors.ServiceTitle ? "is-invalid" : ""}`}
               />
-              {errors.Title && <div className="invalid-feedback">{errors.Title}</div>}
+              {errors.ServiceTitle && (
+                <div className="invalid-feedback">{errors.ServiceTitle}</div>
+              )}
             </div>
             <div className="mb-3 col-lg-4">
               <label className="form-label">Display Order</label>
@@ -322,28 +336,46 @@ export const ExperienceWeddingDetails = () => {
               />
             </div>
             <div className="mb-3 col-lg-12">
-              <label className="form-label">Image</label>
+              <label className="form-label">
+                Service Description <span className="required-field">*</span>
+              </label>
+              <textarea
+                name="ServiceDesc"
+                value={formData.ServiceDesc}
+                placeholder="Enter Service Description"
+                onChange={handleInputChange}
+                className={`form-control ${errors.ServiceDesc ? "is-invalid" : ""}`}
+                rows="3"
+              ></textarea>
+              {errors.ServiceDesc && (
+                <div className="invalid-feedback">{errors.ServiceDesc}</div>
+              )}
+            </div>
+            <div className="mb-3 col-lg-12">
+              <label className="form-label">Service Icon</label>
               <div className="d-flex align-items-center gap-3">
                 <img
-                  src={formData.ImagePreview || allImages.DefultImage}
-                  alt="Wedding Item Preview"
+                  src={formData.ServiceIconPreview || allImages.DefultImage}
+                  alt="Service Icon Preview"
                   className="rounded img-thumbnail"
-                  style={{ width: 96, height: 96, objectFit: "cover" }}
+                  style={{ width: 64, height: 64, objectFit: "cover" }}
                 />
                 <div>
                   <input
-                    ref={weddingImageInputRef}
+                    ref={serviceIconInputRef}
                     type="file"
                     accept="image/*"
-                    className={`form-control ${errors.Image ? "is-invalid" : ""}`}
-                    onChange={handleImageChange}
+                    className={`form-control ${errors.ServiceIcon ? "is-invalid" : ""}`}
+                    onChange={handleIconChange}
                   />
                   <small className="text-muted d-block mt-1">
-                    Recommended: square (1:1), e.g. 800×800px, max 3MB
+                    Recommended: square (1:1), e.g. 128×128px, max 1MB
                   </small>
                 </div>
               </div>
-              {errors.Image && <div className="invalid-feedback d-block">{errors.Image}</div>}
+              {errors.ServiceIcon && (
+                <div className="invalid-feedback d-block">{errors.ServiceIcon}</div>
+              )}
             </div>
           </div>
           <button type="submit" className="btn btn-secondary" disabled={isSaving}>
@@ -352,8 +384,8 @@ export const ExperienceWeddingDetails = () => {
                 ? "Updating"
                 : "Saving"
               : editingId
-              ? "Update Item"
-              : "Add Item"}
+              ? "Update Service"
+              : "Add Service"}
           </button>
           {editingId && (
             <button type="button" className="btn btn-danger ms-1" onClick={resetForm}>
@@ -370,12 +402,14 @@ export const ExperienceWeddingDetails = () => {
           ) : (
             <div className="table-responsive">
               <table className="table align-middle table-bordered">
-                <TableHeader columns={["#", "Image", "Title", "Display Order", "Action"]} />
+                <TableHeader
+                  columns={["#", "Icon", "Service Title", "Description", "Display Order", "Action"]}
+                />
                 <tbody>
-                  {weddingItems.length === 0 ? (
-                    <TableDataStatusError colspan="5" />
+                  {services.length === 0 ? (
+                    <TableDataStatusError colspan="6" />
                   ) : (
-                    weddingItems
+                    services
                       .slice()
                       .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
                       .map((item, index) => (
@@ -383,13 +417,14 @@ export const ExperienceWeddingDetails = () => {
                           <td>{index + 1}</td>
                           <td>
                             <img
-                              src={getFullImageUrl(item.image) || allImages.DefultImage}
-                              alt={item.title}
+                              src={getFullImageUrl(item.serviceIcon) || allImages.DefultImage}
+                              alt={item.serviceTitle}
                               style={{ width: 48, height: 48, objectFit: "cover" }}
                               className="rounded"
                             />
                           </td>
-                          <td>{item.title}</td>
+                          <td>{item.serviceTitle}</td>
+                          <td>{item.serviceDesc}</td>
                           <td>{item.displayOrder}</td>
                           <td>
                             <div className="d-flex gap-1">
