@@ -53,6 +53,7 @@ import { ExperiencesEventPage } from "../pages/ExperiencesEventPage";
 import { ExperiencesLightPage } from "../pages/ExperiencesLightPage";
 import { ExperiencesWeddingPage } from "../pages/ExperiencesWeddingPage";
 import { ExperienceCategory } from "../pages/ExperienceCategory";
+import { ExperienceSubcategory } from "../pages/ExperienceSubcategory";
 
 import { VenueCategory } from "../pages/VenueCategory";
 import { VenueSubcategory } from "../pages/VenueSubcategory";
@@ -233,6 +234,7 @@ const routes = [
       {path:"album-category",element:<AlbumCategory/>},
       {path:"blog-tag",element:<BlogTag/>},
       {path:"experience-category",element:<ExperienceCategory/>},
+      {path:"experience-subcategory",element:<ExperienceSubcategory/>},
       {path:"venue-category",element:<VenueCategory/>},
       {path:"venue-sub-category",element:<VenueSubcategory/>},
 

@@ -57,7 +57,7 @@ export const ManageExperiencesPages = () => {
     if (!searchedTerm.trim()) return allExperiencePages;
     const term = searchedTerm.trim().toLowerCase();
     return allExperiencePages.filter((item) =>
-      [item.title, item.bannerTitle, item.experienceCategoryName]
+      [item.title, item.bannerTitle, item.experienceCategoryName, item.experienceSubcategoryName]
         .filter(Boolean)
         .some((field) => field.toLowerCase().includes(term))
     );
@@ -213,6 +213,7 @@ export const ManageExperiencesPages = () => {
                         columns={[
                           "#",
                           "Experience Category",
+                          "Experience Subcategory",
                           "Title",
                           "Banner Title",
                           "Services",
@@ -225,12 +226,13 @@ export const ManageExperiencesPages = () => {
                       />
                       <tbody className="manage-page-group-table-values p-3">
                         {paginatedExperiencePages.length === 0 ? (
-                          <TableDataStatusError colspan="10" />
+                          <TableDataStatusError colspan="11" />
                         ) : (
                           paginatedExperiencePages.map((item, index) => (
                             <tr key={item.id}>
                               <td>{(currentPage - 1) * entriesPerPage + index + 1}</td>
                               <td>{item.experienceCategoryName}</td>
+                              <td>{item.experienceSubcategoryName}</td>
                               <td>{item.title}</td>
                               <td>{item.bannerTitle}</td>
 

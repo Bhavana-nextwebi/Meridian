@@ -10,6 +10,7 @@ import {
   updateExperiencePage,
 } from "../../services/experiencePageServices";
 import { fetchExperienceCategories } from "../../services/experienceCategoryServices";
+import { fetchExperienceSubcategoriesByCategoryId } from "../../services/experienceSubcategoryServices";
 import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
@@ -28,6 +29,8 @@ import { getTinyMceInit } from "../../utils/tinymceConfig";
 const initialFormState = {
   ExperienceCategoryId: "",
   ExperienceCategoryName: "",
+  ExperienceSubcategoryId: "",
+  ExperienceSubcategoryName: "",
   BannerTitle: "",
   BannerImage: "",
   Title: "",
@@ -63,6 +66,7 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
   const [loading, setLoading] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [experienceCategories, setExperienceCategories] = useState([]);
+  const [experienceSubcategories, setExperienceSubcategories] = useState([]);
   const [experienceGuid, setExperienceGuid] = useState(null);
   const [PageLevelAccessurl, setPageLevelAccessurl] = useState();
 
@@ -105,6 +109,25 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
   }, []);
 
   useEffect(() => {
+    const loadSubcategories = async () => {
+      if (!formData.ExperienceCategoryId) {
+        setExperienceSubcategories([]);
+        return;
+      }
+      try {
+        const subcategories = await fetchExperienceSubcategoriesByCategoryId(
+          formData.ExperienceCategoryId
+        );
+        setExperienceSubcategories(subcategories || []);
+      } catch (error) {
+        handleErrors(error);
+        setExperienceSubcategories([]);
+      }
+    };
+    loadSubcategories();
+  }, [formData.ExperienceCategoryId]);
+
+  useEffect(() => {
     const fetchData = async () => {
       if (id) {
         try {
@@ -113,6 +136,8 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
             setFormData({
               ExperienceCategoryId: data.experienceCategoryId ?? "",
               ExperienceCategoryName: data.experienceCategoryName || "",
+              ExperienceSubcategoryId: data.experienceSubcategoryId ?? "",
+              ExperienceSubcategoryName: data.experienceSubcategoryName || "",
               BannerTitle: data.bannerTitle || "",
               BannerImage: "",
               BannerImagePreview: getFullImageUrl(data.bannerImage),
@@ -153,6 +178,8 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
     if (name === "ExperienceCategoryId") {
       // Keep ExperienceCategoryName in sync with the selected category so the
       // API always receives both the id and a matching denormalized name.
+      // Changing the category also clears the subcategory — those options
+      // belong to the previous parent.
       const selectedCategory = experienceCategories.find(
         (category) => String(category.id) === String(value)
       );
@@ -160,6 +187,19 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
         ...prevData,
         ExperienceCategoryId: value,
         ExperienceCategoryName: selectedCategory ? selectedCategory.experienceCategoryName : "",
+        ExperienceSubcategoryId: "",
+        ExperienceSubcategoryName: "",
+      }));
+    } else if (name === "ExperienceSubcategoryId") {
+      const selectedSubcategory = experienceSubcategories.find(
+        (subcategory) => String(subcategory.id) === String(value)
+      );
+      setFormData((prevData) => ({
+        ...prevData,
+        ExperienceSubcategoryId: value,
+        ExperienceSubcategoryName: selectedSubcategory
+          ? selectedSubcategory.experienceSubcategoryName
+          : "",
       }));
     } else {
       setFormData((prevData) => ({ ...prevData, [name]: value }));
@@ -196,6 +236,10 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
       newErrors.ExperienceCategoryId = "Experience Category is required";
       valid = false;
     }
+    if (!formData.ExperienceSubcategoryId) {
+      newErrors.ExperienceSubcategoryId = "Experience Subcategory is required";
+      valid = false;
+    }
     if (!formData.BannerTitle?.trim()) {
       newErrors.BannerTitle = "Banner Title is required";
       valid = false;
@@ -217,6 +261,8 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
     const payload = new FormData();
     payload.append("ExperienceCategoryId", formData.ExperienceCategoryId);
     payload.append("ExperienceCategoryName", formData.ExperienceCategoryName);
+    payload.append("ExperienceSubcategoryId", formData.ExperienceSubcategoryId);
+    payload.append("ExperienceSubcategoryName", formData.ExperienceSubcategoryName);
     payload.append("BannerTitle", formData.BannerTitle);
     payload.append("Title", formData.Title);
     payload.append("Description", formData.Description);
@@ -319,7 +365,7 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                 </div>
                 <div className="mt-3">
                   <div className="row">
-                    <div className="mb-3 col-lg-6">
+                    <div className="mb-3 col-lg-4">
                       <label className="form-label">
                         Experience Category <span className="required-field">*</span>
                       </label>
@@ -342,7 +388,35 @@ export const AddExperiencePage = ({ editMode = false, setSelectedPageGroup, setE
                         <div className="invalid-feedback">{errors.ExperienceCategoryId}</div>
                       )}
                     </div>
-                    <div className="mb-3 col-lg-6">
+                    <div className="mb-3 col-lg-4">
+                      <label className="form-label">
+                        Experience Subcategory <span className="required-field">*</span>
+                      </label>
+                      <select
+                        name="ExperienceSubcategoryId"
+                        value={formData.ExperienceSubcategoryId}
+                        onChange={handleInputChange}
+                        disabled={!formData.ExperienceCategoryId}
+                        className={`form-select ${
+                          errors.ExperienceSubcategoryId ? "is-invalid" : ""
+                        }`}
+                      >
+                        <option value="">
+                          {formData.ExperienceCategoryId
+                            ? "Select Experience Subcategory"
+                            : "Select a category first"}
+                        </option>
+                        {experienceSubcategories.map((subcategory) => (
+                          <option key={subcategory.id} value={subcategory.id}>
+                            {subcategory.experienceSubcategoryName}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.ExperienceSubcategoryId && (
+                        <div className="invalid-feedback">{errors.ExperienceSubcategoryId}</div>
+                      )}
+                    </div>
+                    <div className="mb-3 col-lg-4">
                       <label className="form-label">
                         Banner Title <span className="required-field">*</span>
                       </label>
