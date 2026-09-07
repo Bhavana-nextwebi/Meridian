@@ -7,14 +7,14 @@ const headers = {
 };
 
 // POST /api/v1/venue-subcategory/add
-// body: { venueCategoryId: number, venueSubcategoryName: string, displayOrder: number }
-export const createVenueSubcategory = async (venueCategoryId, venueSubcategoryName, displayOrder) => {
-  const response = await axiosInstance.post('venue-subcategory/add', { venueCategoryId, venueSubcategoryName, displayOrder }, { headers });
+// body: { venueCategoryId: number, venueSubcategoryName: string, venueSubCategoryUrl: string, displayOrder: number }
+export const createVenueSubcategory = async (venueCategoryId, venueSubcategoryName, venueSubCategoryUrl, displayOrder) => {
+  const response = await axiosInstance.post('venue-subcategory/add', { venueCategoryId, venueSubcategoryName, venueSubCategoryUrl, displayOrder }, { headers });
   return response.data;
 };
 
 // PUT /api/v1/venue-subcategory/update
-// body: { id: number, venueCategoryId: number, venueSubcategoryName: string, displayOrder: number }
+// body: { id: number, venueCategoryId: number, venueSubcategoryName: string, venueSubCategoryUrl: string, displayOrder: number }
 export const updateVenueSubcategory = async (payload) => {
   const response = await axiosInstance.put('venue-subcategory/update', payload, { headers });
   return response.data;

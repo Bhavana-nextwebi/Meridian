@@ -7,21 +7,21 @@ const headers = {
 };
 
 // POST /api/v1/venue-category/add
-// body: { venueCategoryName: string, displayOrder: number }
-export const createVenueCategory = async (venueCategoryName, displayOrder) => {
-  const response = await axiosInstance.post('venue-category/add', { venueCategoryName, displayOrder }, { headers });
+// body: { venueCategoryName: string, venueCategoryUrl: string, displayOrder: number }
+export const createVenueCategory = async (venueCategoryName, venueCategoryUrl, displayOrder) => {
+  const response = await axiosInstance.post('venue-category/add', { venueCategoryName, venueCategoryUrl, displayOrder }, { headers });
   return response.data;
 };
 
 // PUT /api/v1/venue-category/update
-// body: { id: number, venueCategoryName: string, displayOrder: number }
+// body: { id: number, venueCategoryName: string, venueCategoryUrl: string, displayOrder: number }
 export const updateVenueCategory = async (payload) => {
   const response = await axiosInstance.put('venue-category/update', payload, { headers });
   return response.data;
 };
 
 // GET /api/v1/venue-category/get-all
-// returns: { result: [{ id, venueCategoryName, displayOrder, addedOn, addedIp, status }], isSuccess, message, responseCode }
+// returns: { result: [{ id, venueCategoryName, venueCategoryUrl,  displayOrder, addedOn, addedIp, status }], isSuccess, message, responseCode }
 export const fetchVenueCategories = async () => {
   const response = await axiosInstance.get('venue-category/get-all', { headers });
   return response.data.result;

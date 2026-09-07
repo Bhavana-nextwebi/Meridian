@@ -7,21 +7,21 @@ const headers = {
 };
 
 // POST /api/v1/experience-subcategory/add
-// body: { experienceCategoryId: number, experienceSubcategoryName: string, displayOrder: number }
-export const createExperienceSubcategory = async (experienceCategoryId, experienceSubcategoryName, displayOrder) => {
-  const response = await axiosInstance.post('experience-subcategory/add', { experienceCategoryId, experienceSubcategoryName, displayOrder }, { headers });
+// body: { experienceCategoryId: number, experienceSubcategoryName: string, experienceSubcategoryUrl: string, displayOrder: number }
+export const createExperienceSubcategory = async (experienceCategoryId, experienceSubcategoryName, experienceSubcategoryUrl, displayOrder) => {
+  const response = await axiosInstance.post('experience-subcategory/add', { experienceCategoryId, experienceSubcategoryName, experienceSubcategoryUrl, displayOrder }, { headers });
   return response.data;
 };
 
 // PUT /api/v1/experience-subcategory/update
-// body: { id: number, experienceSubcategoryName: string, displayOrder: number }
+// body: { id: number, experienceSubcategoryName: string, experienceSubcategoryUrl: string,  displayOrder: number }
 export const updateExperienceSubcategory = async (payload) => {
   const response = await axiosInstance.put('experience-subcategory/update', payload, { headers });
   return response.data;
 };
 
 // GET /api/v1/experience-subcategory/GetAllExperienceSubcategories
-// returns: { result: [{ id, experienceCategoryId, experienceSubcategoryName, displayOrder, addedOn, addedIp, status }], isSuccess, message, responseCode }
+// returns: { result: [{ id, experienceCategoryId, experienceSubcategoryName, experienceSubcategoryUrl,  displayOrder, addedOn, addedIp, status }], isSuccess, message, responseCode }
 export const fetchExperienceSubcategories = async () => {
   const response = await axiosInstance.get('experience-subcategory/GetAllExperienceSubcategories', { headers });
   return response.data.result;
