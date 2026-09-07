@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
+import { Editor } from "@tinymce/tinymce-react";
 
 import {
   addVenueCategoryWhyThisVenue,
@@ -19,6 +20,10 @@ import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
 import { Loading } from "../Common/OtherElements/Loading";
 import { TableDataStatusError } from "../Common/OtherElements/TableDataStatusError";
 import TableHeader from "../Common/TableComponent/TableHeader";
+
+// NOTE: replace with your own TinyMCE Cloud API key, or switch to a
+// self-hosted TinyMCE bundle if you don't want to depend on the cloud CDN.
+const TINYMCE_API_KEY = "your-api-key";
 
 const initialWhyFormState = {
   Id: null,
@@ -182,6 +187,14 @@ export const ManageVenueCategoryWhyThisVenue = () => {
     setSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
+  // TinyMCE's onEditorChange gives back the HTML content directly (no
+  // event object), so it needs its own handler instead of reusing
+  // handleSectionInputChange.
+  const handleSection5DescChange = (content) => {
+    setSectionFormData((prevData) => ({ ...prevData, Section5Desc: content }));
+    setSectionErrors((prevErrors) => ({ ...prevErrors, Section5Desc: "" }));
+  };
+
   const validateSection = () => {
     const newErrors = {};
     let valid = true;
@@ -190,7 +203,13 @@ export const ManageVenueCategoryWhyThisVenue = () => {
       newErrors.Section5Title = "Title is required";
       valid = false;
     }
-    if (!sectionFormData.Section5Desc?.trim()) {
+    // TinyMCE returns "<p>&nbsp;</p>" style markup for an "empty" editor,
+    // so strip tags before checking for actual content.
+    const plainDesc = (sectionFormData.Section5Desc || "")
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, "")
+      .trim();
+    if (!plainDesc) {
       newErrors.Section5Desc = "Description is required";
       valid = false;
     }
@@ -297,16 +316,32 @@ export const ManageVenueCategoryWhyThisVenue = () => {
                 <label className="form-label">
                   Section 5 Description <span className="required-field">*</span>
                 </label>
-                <textarea
-                  name="Section5Desc"
+                <Editor
+                  apiKey={TINYMCE_API_KEY}
                   value={sectionFormData.Section5Desc}
-                  placeholder="Enter Section 5 Description"
-                  onChange={handleSectionInputChange}
-                  className={`form-control ${sectionErrors.Section5Desc ? "is-invalid" : ""}`}
-                  rows="3"
-                ></textarea>
+                  onEditorChange={handleSection5DescChange}
+                  init={{
+                    height: 300,
+                    menubar: false,
+                    branding: false,
+                    plugins: [
+                      "advlist",
+                      "autolink",
+                      "lists",
+                      "link",
+                      "charmap",
+                      "preview",
+                      "searchreplace",
+                      "visualblocks",
+                      "wordcount",
+                    ],
+                    toolbar:
+                      "undo redo | formatselect | bold italic underline | " +
+                      "alignleft aligncenter alignright | bullist numlist | link | removeformat",
+                  }}
+                />
                 {sectionErrors.Section5Desc && (
-                  <div className="invalid-feedback">{sectionErrors.Section5Desc}</div>
+                  <div className="invalid-feedback d-block">{sectionErrors.Section5Desc}</div>
                 )}
               </div>
 

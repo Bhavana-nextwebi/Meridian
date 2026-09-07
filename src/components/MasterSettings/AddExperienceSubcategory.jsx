@@ -7,6 +7,15 @@ import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import ComponentHeader from '../Common/OtherElements/ComponentHeader';
 
+// Same slugify logic used for Blog URL generation, reused here so the
+// auto-generated URL stays consistent across the app.
+const generateSlug = (value) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .replace(/\s+/g, '-');
+
 const validateExperienceSubcategory = (formData) => {
   const errors = { experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' };
 
@@ -108,7 +117,7 @@ const experienceCategorySelectStyles = {
 };
 
 export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
-  const [formData, setFormData] = useState({ experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' });
+  const [formData, setFormData] = useState({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
   const [errors, setErrors] = useState({ experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' });
   const [apiError, setApiError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -134,13 +143,14 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
           setFormData({
             experienceCategoryId: data.experienceCategoryId || '',
             experienceSubcategoryName: data.experienceSubcategoryName || '',
+            experienceSubcategoryUrl: data.experienceSubcategoryUrl || generateSlug(data.experienceSubcategoryName || ''),
             displayOrder: data.displayOrder ?? '',
           });
         } catch (error) {
           handleErrors(error);
         }
       } else {
-        setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' });
+        setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
       }
     };
     fetchData();
@@ -148,7 +158,16 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+
+    if (name === 'experienceSubcategoryName') {
+      setFormData((prevData) => ({
+        ...prevData,
+        experienceSubcategoryName: value,
+        experienceSubcategoryUrl: generateSlug(value),
+      }));
+    } else {
+      setFormData((prevData) => ({ ...prevData, [name]: value }));
+    }
   };
 
   const categoryOptions = experienceCategories.map((category) => ({
@@ -182,6 +201,7 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
           await updateExperienceSubcategory({
             id: initialData.id,
             experienceSubcategoryName: formData.experienceSubcategoryName,
+            experienceSubcategoryUrl: formData.experienceSubcategoryUrl,
             displayOrder: Number(formData.displayOrder),
           });
           toast.success('Experience subcategory updated successfully!');
@@ -192,12 +212,13 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
           await createExperienceSubcategory(
             Number(formData.experienceCategoryId),
             formData.experienceSubcategoryName,
+            formData.experienceSubcategoryUrl,
             Number(formData.displayOrder)
           );
           toast.success('Experience subcategory added successfully!');
           setIsButtonDisabled(false);
         }
-        setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' });
+        setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
         if (onSuccess) onSuccess();
       } catch (error) {
         handleErrors(error);
@@ -209,7 +230,7 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
   }, [formData, editMode, initialData, onSuccess, setEditMode]);
 
   const handleAddNewClick = () => {
-    setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' });
+    setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
     setErrors({ experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' });
     setApiError('');
     setSelectedPageGroup(null);
@@ -265,6 +286,19 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
                         placeholder='Enter Experience Subcategory Name'
                       />
                       {errors.experienceSubcategoryName && <div className="invalid-feedback">{errors.experienceSubcategoryName}</div>}
+                    </div>
+                  </div>
+                  <div className="col-lg-3 col-md-6 col-sm-12">
+                    <div className="mb-3">
+                      <label htmlFor="experience_subcategory_url" className="form-label">Experience Subcategory URL</label>
+                      <input
+                        type="text"
+                        name="experienceSubcategoryUrl"
+                        value={formData.experienceSubcategoryUrl}
+                        className="form-control"
+                        placeholder='Auto-generated from name'
+                        disabled
+                      />
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-6 col-sm-12">

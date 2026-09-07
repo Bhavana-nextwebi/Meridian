@@ -148,6 +148,10 @@ export const ManageExperiencesPages = () => {
           .action-icon-light:hover { background: #fbcfe8; }
           .action-icon-wedding { background: #ede9fe; color: #6d28d9; }
           .action-icon-wedding:hover { background: #ddd6fe; }
+          .action-icon-faq { background: #e0f2fe; color: #0369a1; }
+          .action-icon-faq:hover { background: #bae6fd; }
+          .action-icon-cards { background: #ffe4e6; color: #be123c; }
+          .action-icon-cards:hover { background: #fecdd3; }
         `}
       </style>
       {pageAccessDetails.viewAccess ? (
@@ -220,12 +224,14 @@ export const ManageExperiencesPages = () => {
                           "Events",
                           "Light",
                           "Testimonials",
+                          "FAQ",
+                          "Cards",
                           "Action",
                         ]}
                       />
                       <tbody className="manage-page-group-table-values p-3">
                         {paginatedExperiencePages.length === 0 ? (
-                          <TableDataStatusError colspan="10" />
+                          <TableDataStatusError colspan="12" />
                         ) : (
                           paginatedExperiencePages.map((item, index) => (
                             <tr key={item.id}>
@@ -298,6 +304,32 @@ export const ManageExperiencesPages = () => {
                                   }
                                 >
                                   <i className="ri-chat-quote-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-faq"
+                                  title="Manage FAQs"
+                                  onClick={() =>
+                                    navigate(`/experience-pages/${item.experienceGuid}/faq`)
+                                  }
+                                >
+                                  <i className="ri-question-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-cards"
+                                  title="Manage Cards"
+                                  onClick={() =>
+                                    navigate(`/experience-pages/${item.experienceGuid}/cards`)
+                                  }
+                                >
+                                  <i className="ri-layout-grid-line"></i>
                                 </button>
                               </td>
 

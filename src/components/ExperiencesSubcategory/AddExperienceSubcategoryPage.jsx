@@ -17,21 +17,27 @@ import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 import { getFullImageUrl } from "../../utils/imageUrl";
 import { getTinyMceInit } from "../../utils/tinymceConfig";
 
-// CtaTitle/CtaDescription, LightsTitle/LightsSubTitle/LightsDescription,
+// CtaTitle/CtaDescription/ButtonText, LightsTitle/LightsSubTitle/LightsDescription,
 // WeddingSectionTitle, and SectionNeedsTitle are still part of formData
 // (and still sent on submit) but are managed from the Events, Light,
-// Wedding, and Services screens instead.
+// Wedding, and Services screens instead. ButtonText specifically is edited
+// alongside Call To Action content on the Events screen.
 const initialFormState = {
   ExperienceCategoryId: "",
   ExperienceSubcategoryId: "",
   ExperienceSubcategoryName: "",
   BannerTitle: "",
+  BannerDesc: "",
   BannerImage: "",
   Title: "",
   Description: "",
   Image: "",
+  WhyChooseTitle: "",
+  WhyChooseDesc: "",
+  WhyChooseImage: "",
   CtaTitle: "",
   CtaDescription: "",
+  ButtonText: "",
   LightsTitle: "",
   LightsSubTitle: "",
   LightsDescription: "",
@@ -123,14 +129,20 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
             ExperienceSubcategoryId: data.experienceSubcategoryId ?? "",
             ExperienceSubcategoryName: data.experienceSubcategoryName || "",
             BannerTitle: data.bannerTitle || "",
+            BannerDesc: data.bannerDesc || "",
             BannerImage: "",
             BannerImagePreview: getFullImageUrl(data.bannerImage),
             Title: data.title || "",
             Description: data.description || "",
             Image: "",
             ImagePreview: getFullImageUrl(data.image),
+            WhyChooseTitle: data.whyChooseTitle || "",
+            WhyChooseDesc: data.whyChooseDesc || "",
+            WhyChooseImage: "",
+            WhyChooseImagePreview: getFullImageUrl(data.whyChooseImage),
             CtaTitle: data.ctaTitle || "",
             CtaDescription: data.ctaDescription || "",
+            ButtonText: data.buttonText || "",
             LightsTitle: data.lightsTitle || "",
             LightsSubTitle: data.lightsSubTitle || "",
             LightsDescription: data.lightsDescription || "",
@@ -197,6 +209,11 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
     setErrors((prevErrors) => ({ ...prevErrors, Description: "" }));
   };
 
+  const handleWhyChooseDescChange = (content) => {
+    setFormData((prevData) => ({ ...prevData, WhyChooseDesc: content }));
+    setErrors((prevErrors) => ({ ...prevErrors, WhyChooseDesc: "" }));
+  };
+
   const handleImageChange = (e, imageField) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -241,10 +258,14 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
     }
     payload.append("ExperienceSubcategoryName", formData.ExperienceSubcategoryName);
     payload.append("BannerTitle", formData.BannerTitle);
+    payload.append("BannerDesc", formData.BannerDesc);
     payload.append("Title", formData.Title);
     payload.append("Description", formData.Description);
+    payload.append("WhyChooseTitle", formData.WhyChooseTitle);
+    payload.append("WhyChooseDesc", formData.WhyChooseDesc);
     payload.append("CtaTitle", formData.CtaTitle);
     payload.append("CtaDescription", formData.CtaDescription);
+    payload.append("ButtonText", formData.ButtonText);
     payload.append("LightsTitle", formData.LightsTitle);
     payload.append("LightsSubTitle", formData.LightsSubTitle);
     payload.append("LightsDescription", formData.LightsDescription);
@@ -259,6 +280,9 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
     }
     if (formData.Image) {
       payload.append("Image", formData.Image);
+    }
+    if (formData.WhyChooseImage) {
+      payload.append("WhyChooseImage", formData.WhyChooseImage);
     }
     if (id) {
       payload.append("Id", id);
@@ -349,7 +373,7 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
                         value={formData.ExperienceCategoryId}
                         onChange={handleInputChange}
                         disabled={!!id}
-                        className="form-select"
+                        className="form-select"a
                       >
                         <option value="">All Categories</option>
                         {experienceCategories.map((category) => (
@@ -399,6 +423,21 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
                         <div className="invalid-feedback">{errors.BannerTitle}</div>
                       )}
                     </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Banner Description</label>
+                    <textarea
+                      name="BannerDesc"
+                      value={formData.BannerDesc}
+                      placeholder="Enter Banner Description"
+                      onChange={handleInputChange}
+                      className={`form-control ${errors.BannerDesc ? "is-invalid" : ""}`}
+                      rows="3"
+                    ></textarea>
+                    {errors.BannerDesc && (
+                      <div className="invalid-feedback">{errors.BannerDesc}</div>
+                    )}
                   </div>
 
                   <div className="d-flex flex-column align-items-center mb-3">
@@ -503,6 +542,74 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
                 </div>
               </div>
 
+              <div className="card mt-3 p-3">
+                <div className="card-header-wrapper p-1">
+                  <h5 className="blogs-heading">Why Choose Section</h5>
+                </div>
+                <div className="mt-3">
+                  <div className="mb-3">
+                    <label className="form-label">Why Choose Title</label>
+                    <input
+                      type="text"
+                      name="WhyChooseTitle"
+                      value={formData.WhyChooseTitle}
+                      placeholder="Enter Why Choose Title"
+                      onChange={handleInputChange}
+                      className={`form-control ${errors.WhyChooseTitle ? "is-invalid" : ""}`}
+                    />
+                    {errors.WhyChooseTitle && (
+                      <div className="invalid-feedback">{errors.WhyChooseTitle}</div>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Why Choose Description</label>
+                    <Editor
+                      tinymceScriptSrc="/tinymce/tinymce.min.js"
+                      value={formData.WhyChooseDesc}
+                      init={getTinyMceInit()}
+                      onEditorChange={handleWhyChooseDescChange}
+                    />
+                    {errors.WhyChooseDesc && (
+                      <div style={{ color: "#dc3545", fontSize: ".875em" }} className="mt-1">
+                        {errors.WhyChooseDesc}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="d-flex flex-column align-items-center">
+                    <div className="profile-user position-relative d-inline-block mx-auto mb-2">
+                      <img
+                        src={formData.WhyChooseImagePreview || allImages.DefultImage}
+                        className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
+                        alt="Why Choose Preview"
+                      />
+                      <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
+                        <input
+                          id="escpWhyChooseImage"
+                          type="file"
+                          accept="image/*"
+                          className="profile-img-file-input"
+                          onChange={(e) => handleImageChange(e, "WhyChooseImage")}
+                        />
+                        <label htmlFor="escpWhyChooseImage" className="profile-photo-edit avatar-xs">
+                          <span className="avatar-title rounded-circle bg-light text-body shadow">
+                            <i className="ri-camera-fill"></i>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                    <small className="text-muted">
+                      Recommended: square (1:1), e.g. 1024×1024px, max 3MB
+                    </small>
+                    {errors.WhyChooseImage && (
+                      <div className="invalid-feedback d-block text-center">
+                        {errors.WhyChooseImage}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {id && (
                 <div className="card mt-3 p-3">
                   <div className="card-header-wrapper p-1">
@@ -510,10 +617,11 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
                   </div>
                   <div className="mt-3">
                     <p className="text-muted mb-3">
-                      Call To Action content is managed from the Events screen, Lights
-                      section content is managed from the Light screen, Gallery Title is
-                      managed from the Wedding screen, and Service Needs Title is managed
-                      from the Services screen for this page.
+                      Call To Action and Button Text content is managed from the Events
+                      screen, Lights section content is managed from the Light screen,
+                      Gallery Title is managed from the Wedding screen, Service Needs Title
+                      is managed from the Services screen, and Cards and FAQs are managed
+                      from their own screens for this page.
                     </p>
                     {experienceSubcategoryGuid ? (
                       <div className="d-flex flex-wrap gap-2">
@@ -561,6 +669,24 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
                           }
                         >
                           Manage Wedding Items
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() =>
+                            navigate(`/manage-experience-subcategory/${experienceSubcategoryGuid}/cards`)
+                          }
+                        >
+                          Manage Cards
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() =>
+                            navigate(`/manage-experience-subcategory/${experienceSubcategoryGuid}/faqs`)
+                          }
+                        >
+                          Manage FAQs
                         </button>
                       </div>
                     ) : (

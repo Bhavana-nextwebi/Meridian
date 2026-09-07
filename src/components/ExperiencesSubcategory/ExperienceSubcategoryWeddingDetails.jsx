@@ -213,10 +213,14 @@ export const ExperienceSubcategoryWeddingDetails = () => {
       payload.append("Id", record.id);
       payload.append("ExperienceSubcategoryName", record.experienceSubcategoryName || "");
       payload.append("BannerTitle", record.bannerTitle || "");
+      payload.append("BannerDesc", record.bannerDesc || "");
       payload.append("Title", record.title || "");
       payload.append("Description", record.description || "");
+      payload.append("WhyChooseTitle", record.whyChooseTitle || "");
+      payload.append("WhyChooseDesc", record.whyChooseDesc || "");
       payload.append("CtaTitle", record.ctaTitle || "");
       payload.append("CtaDescription", record.ctaDescription || "");
+      payload.append("ButtonText", record.buttonText || "");
       payload.append("LightsTitle", record.lightsTitle || "");
       payload.append("LightsSubTitle", record.lightsSubTitle || "");
       payload.append("LightsDescription", record.lightsDescription || "");

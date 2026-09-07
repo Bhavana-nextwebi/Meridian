@@ -5,6 +5,15 @@ import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import ComponentHeader from '../Common/OtherElements/ComponentHeader';
 
+// Same slugify logic used for Blog URL generation, reused here so the
+// auto-generated URL stays consistent across the app.
+const generateSlug = (value) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .replace(/\s+/g, '-');
+
 const validateExperienceCategory = (formData) => {
   const errors = { experienceCategoryName: '', displayOrder: '' };
 
@@ -23,7 +32,7 @@ const validateExperienceCategory = (formData) => {
 };
 
 export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
-  const [formData, setFormData] = useState({ experienceCategoryName: '', displayOrder: '' });
+  const [formData, setFormData] = useState({ experienceCategoryName: '', experienceCategoryUrl: '', displayOrder: '' });
   const [errors, setErrors] = useState({ experienceCategoryName: '', displayOrder: '' });
   const [apiError, setApiError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -35,13 +44,14 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
           const data = await fetchExperienceCategoryById(initialData.id);
           setFormData({
             experienceCategoryName: data.experienceCategoryName || '',
+            experienceCategoryUrl: data.experienceCategoryUrl || generateSlug(data.experienceCategoryName || ''),
             displayOrder: data.displayOrder ?? '',
           });
         } catch (error) {
           handleErrors(error);
         }
       } else {
-        setFormData({ experienceCategoryName: '', displayOrder: '' });
+        setFormData({ experienceCategoryName: '', experienceCategoryUrl: '', displayOrder: '' });
       }
     };
     fetchData();
@@ -49,7 +59,16 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+
+    if (name === 'experienceCategoryName') {
+      setFormData((prevData) => ({
+        ...prevData,
+        experienceCategoryName: value,
+        experienceCategoryUrl: generateSlug(value),
+      }));
+    } else {
+      setFormData((prevData) => ({ ...prevData, [name]: value }));
+    }
   };
 
   const handleSubmit = useCallback(async (e) => {
@@ -61,6 +80,7 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
       setApiError('');
       const payload = {
         experienceCategoryName: formData.experienceCategoryName,
+        experienceCategoryUrl: formData.experienceCategoryUrl,
         displayOrder: Number(formData.displayOrder),
       };
       try {
@@ -72,11 +92,11 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
           setEditMode(false);
         } else {
           setIsButtonDisabled(true);
-          await createExperienceCategory(payload.experienceCategoryName, payload.displayOrder);
+          await createExperienceCategory(payload.experienceCategoryName, payload.experienceCategoryUrl, payload.displayOrder);
           toast.success('Experience category added successfully!');
           setIsButtonDisabled(false);
         }
-        setFormData({ experienceCategoryName: '', displayOrder: '' });
+        setFormData({ experienceCategoryName: '', experienceCategoryUrl: '', displayOrder: '' });
         if (onSuccess) onSuccess();
       } catch (error) {
         handleErrors(error);
@@ -88,7 +108,7 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
   }, [formData, editMode, initialData, onSuccess, setEditMode]);
 
   const handleAddNewClick = () => {
-    setFormData({ experienceCategoryName: '', displayOrder: '' });
+    setFormData({ experienceCategoryName: '', experienceCategoryUrl: '', displayOrder: '' });
     setErrors({ experienceCategoryName: '', displayOrder: '' });
     setApiError('');
     setSelectedPageGroup(null);
@@ -120,6 +140,19 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
                         placeholder='Enter Experience Category Name'
                       />
                       {errors.experienceCategoryName && <div className="invalid-feedback">{errors.experienceCategoryName}</div>}
+                    </div>
+                  </div>
+                  <div className="col-lg-3 col-md-6 col-sm-12">
+                    <div className="mb-3">
+                      <label htmlFor="experience_category_url" className="form-label">Experience Category URL</label>
+                      <input
+                        type="text"
+                        name="experienceCategoryUrl"
+                        value={formData.experienceCategoryUrl}
+                        className="form-control"
+                        placeholder='Auto-generated from name'
+                        disabled
+                      />
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-6 col-sm-12">

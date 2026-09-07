@@ -7,6 +7,15 @@ import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import ComponentHeader from '../Common/OtherElements/ComponentHeader';
 
+// Same slugify logic used for Blog URL generation, reused here so the
+// auto-generated URL stays consistent across the app.
+const generateSlug = (value) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .replace(/\s+/g, '-');
+
 const validateVenueSubcategory = (formData) => {
   const errors = { venueCategoryId: '', venueSubcategoryName: '', displayOrder: '' };
 
@@ -108,7 +117,7 @@ const venueCategorySelectStyles = {
 };
 
 export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
-  const [formData, setFormData] = useState({ venueCategoryId: '', venueSubcategoryName: '', displayOrder: '' });
+  const [formData, setFormData] = useState({ venueCategoryId: '', venueSubcategoryName: '', venueSubcategoryUrl: '', displayOrder: '' });
   const [errors, setErrors] = useState({ venueCategoryId: '', venueSubcategoryName: '', displayOrder: '' });
   const [apiError, setApiError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -134,13 +143,14 @@ export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSucc
           setFormData({
             venueCategoryId: data.venueCategoryId || '',
             venueSubcategoryName: data.venueSubcategoryName || '',
+            venueSubcategoryUrl: data.venueSubcategoryUrl || generateSlug(data.venueSubcategoryName || ''),
             displayOrder: data.displayOrder ?? '',
           });
         } catch (error) {
           handleErrors(error);
         }
       } else {
-        setFormData({ venueCategoryId: '', venueSubcategoryName: '', displayOrder: '' });
+        setFormData({ venueCategoryId: '', venueSubcategoryName: '', venueSubcategoryUrl: '', displayOrder: '' });
       }
     };
     fetchData();
@@ -148,7 +158,16 @@ export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSucc
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+
+    if (name === 'venueSubcategoryName') {
+      setFormData((prevData) => ({
+        ...prevData,
+        venueSubcategoryName: value,
+        venueSubcategoryUrl: generateSlug(value),
+      }));
+    } else {
+      setFormData((prevData) => ({ ...prevData, [name]: value }));
+    }
   };
 
   const categoryOptions = venueCategories.map((category) => ({
@@ -179,6 +198,7 @@ export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSucc
       const payload = {
         venueCategoryId: Number(formData.venueCategoryId),
         venueSubcategoryName: formData.venueSubcategoryName,
+        venueSubcategoryUrl: formData.venueSubcategoryUrl,
         displayOrder: Number(formData.displayOrder),
       };
       try {
@@ -190,11 +210,11 @@ export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSucc
           setEditMode(false);
         } else {
           setIsButtonDisabled(true);
-          await createVenueSubcategory(payload.venueCategoryId, payload.venueSubcategoryName, payload.displayOrder);
+          await createVenueSubcategory(payload.venueCategoryId, payload.venueSubcategoryName, payload.venueSubcategoryUrl, payload.displayOrder);
           toast.success('Venue subcategory added successfully!');
           setIsButtonDisabled(false);
         }
-        setFormData({ venueCategoryId: '', venueSubcategoryName: '', displayOrder: '' });
+        setFormData({ venueCategoryId: '', venueSubcategoryName: '', venueSubcategoryUrl: '', displayOrder: '' });
         if (onSuccess) onSuccess();
       } catch (error) {
         handleErrors(error);
@@ -206,7 +226,7 @@ export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSucc
   }, [formData, editMode, initialData, onSuccess, setEditMode]);
 
   const handleAddNewClick = () => {
-    setFormData({ venueCategoryId: '', venueSubcategoryName: '', displayOrder: '' });
+    setFormData({ venueCategoryId: '', venueSubcategoryName: '', venueSubcategoryUrl: '', displayOrder: '' });
     setErrors({ venueCategoryId: '', venueSubcategoryName: '', displayOrder: '' });
     setApiError('');
     setSelectedPageGroup(null);
@@ -261,6 +281,19 @@ export const AddVenueSubcategory = ({ editMode = false, initialData = {}, onSucc
                         placeholder='Enter Venue Subcategory Name'
                       />
                       {errors.venueSubcategoryName && <div className="invalid-feedback">{errors.venueSubcategoryName}</div>}
+                    </div>
+                  </div>
+                  <div className="col-lg-3 col-md-6 col-sm-12">
+                    <div className="mb-3">
+                      <label htmlFor="venue_subcategory_url" className="form-label">Venue Subcategory URL</label>
+                      <input
+                        type="text"
+                        name="venueSubcategoryUrl"
+                        value={formData.venueSubcategoryUrl}
+                        className="form-control"
+                        placeholder='Auto-generated from name'
+                        disabled
+                      />
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-6 col-sm-12">

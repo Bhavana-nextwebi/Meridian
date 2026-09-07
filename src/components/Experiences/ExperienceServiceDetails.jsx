@@ -221,10 +221,14 @@ export const ExperienceServiceDetails = () => {
       payload.append("ExperienceCategoryId", record.experienceCategoryId ?? "");
       payload.append("ExperienceCategoryName", record.experienceCategoryName || "");
       payload.append("BannerTitle", record.bannerTitle || "");
+      payload.append("BannerDesc", record.bannerDesc || "");
       payload.append("Title", record.title || "");
       payload.append("Description", record.description || "");
+      payload.append("ButtonText", record.buttonText || "");
       payload.append("CtaTitle", record.ctaTitle || "");
       payload.append("CtaDescription", record.ctaDescription || "");
+      payload.append("WhyChooseTitle", record.whyChooseTitle || "");
+      payload.append("WhyChooseDesc", record.whyChooseDesc || "");
       payload.append("LightsTitle", record.lightsTitle || "");
       payload.append("LightsSubTitle", record.lightsSubTitle || "");
       payload.append("LightsDescription", record.lightsDescription || "");

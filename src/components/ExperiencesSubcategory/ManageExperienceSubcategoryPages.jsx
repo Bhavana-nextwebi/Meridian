@@ -152,6 +152,10 @@ export const ManageExperienceSubcategoryPages = () => {
           .action-icon-light:hover { background: #fbcfe8; }
           .action-icon-wedding { background: #ede9fe; color: #6d28d9; }
           .action-icon-wedding:hover { background: #ddd6fe; }
+          .action-icon-cards { background: #e0f2fe; color: #0369a1; }
+          .action-icon-cards:hover { background: #bae6fd; }
+          .action-icon-faqs { background: #fee2e2; color: #b91c1c; }
+          .action-icon-faqs:hover { background: #fecaca; }
         `}
       </style>
       {pageAccessDetails.viewAccess ? (
@@ -227,12 +231,14 @@ export const ManageExperienceSubcategoryPages = () => {
                           "Events",
                           "Light",
                           "Testimonials",
+                          "Cards",
+                          "FAQs",
                           "Action",
                         ]}
                       />
                       <tbody className="manage-page-group-table-values p-3">
                         {paginatedPages.length === 0 ? (
-                          <TableDataStatusError colspan="10" />
+                          <TableDataStatusError colspan="12" />
                         ) : (
                           paginatedPages.map((item, index) => (
                             <tr key={item.id}>
@@ -313,6 +319,36 @@ export const ManageExperienceSubcategoryPages = () => {
                                   }
                                 >
                                   <i className="ri-chat-quote-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-cards"
+                                  title="Manage Cards"
+                                  onClick={() =>
+                                    navigate(
+                                      `/manage-experience-subcategory/${item.experienceSubcategoryGuid}/cards`
+                                    )
+                                  }
+                                >
+                                  <i className="ri-layout-grid-line"></i>
+                                </button>
+                              </td>
+
+                              <td className="text-center">
+                                <button
+                                  type="button"
+                                  className="action-icon-btn action-icon-faqs"
+                                  title="Manage FAQs"
+                                  onClick={() =>
+                                    navigate(
+                                      `/manage-experience-subcategory/${item.experienceSubcategoryGuid}/faqs`
+                                    )
+                                  }
+                                >
+                                  <i className="ri-question-answer-line"></i>
                                 </button>
                               </td>
 

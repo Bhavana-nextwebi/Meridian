@@ -5,6 +5,15 @@ import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import ComponentHeader from '../Common/OtherElements/ComponentHeader';
 
+// Same slugify logic used for Blog URL generation, reused here so the
+// auto-generated URL stays consistent across the app.
+const generateSlug = (value) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .replace(/\s+/g, '-');
+
 const validateVenueCategory = (formData) => {
   const errors = { venueCategoryName: '', displayOrder: '' };
 
@@ -23,7 +32,7 @@ const validateVenueCategory = (formData) => {
 };
 
 export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
-  const [formData, setFormData] = useState({ venueCategoryName: '', displayOrder: '' });
+  const [formData, setFormData] = useState({ venueCategoryName: '', venueCategoryUrl: '', displayOrder: '' });
   const [errors, setErrors] = useState({ venueCategoryName: '', displayOrder: '' });
   const [apiError, setApiError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -35,13 +44,14 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
           const data = await fetchVenueCategoryById(initialData.id);
           setFormData({
             venueCategoryName: data.venueCategoryName || '',
+            venueCategoryUrl: data.venueCategoryUrl || generateSlug(data.venueCategoryName || ''),
             displayOrder: data.displayOrder ?? '',
           });
         } catch (error) {
           handleErrors(error);
         }
       } else {
-        setFormData({ venueCategoryName: '', displayOrder: '' });
+        setFormData({ venueCategoryName: '', venueCategoryUrl: '', displayOrder: '' });
       }
     };
     fetchData();
@@ -49,7 +59,16 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+
+    if (name === 'venueCategoryName') {
+      setFormData((prevData) => ({
+        ...prevData,
+        venueCategoryName: value,
+        venueCategoryUrl: generateSlug(value),
+      }));
+    } else {
+      setFormData((prevData) => ({ ...prevData, [name]: value }));
+    }
   };
 
   const handleSubmit = useCallback(async (e) => {
@@ -61,6 +80,7 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
       setApiError('');
       const payload = {
         venueCategoryName: formData.venueCategoryName,
+        venueCategoryUrl: formData.venueCategoryUrl,
         displayOrder: Number(formData.displayOrder),
       };
       try {
@@ -72,11 +92,11 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
           setEditMode(false);
         } else {
           setIsButtonDisabled(true);
-          await createVenueCategory(payload.venueCategoryName, payload.displayOrder);
+          await createVenueCategory(payload.venueCategoryName, payload.venueCategoryUrl, payload.displayOrder);
           toast.success('Venue category added successfully!');
           setIsButtonDisabled(false);
         }
-        setFormData({ venueCategoryName: '', displayOrder: '' });
+        setFormData({ venueCategoryName: '', venueCategoryUrl: '', displayOrder: '' });
         if (onSuccess) onSuccess();
       } catch (error) {
         handleErrors(error);
@@ -88,7 +108,7 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
   }, [formData, editMode, initialData, onSuccess, setEditMode]);
 
   const handleAddNewClick = () => {
-    setFormData({ venueCategoryName: '', displayOrder: '' });
+    setFormData({ venueCategoryName: '', venueCategoryUrl: '', displayOrder: '' });
     setErrors({ venueCategoryName: '', displayOrder: '' });
     setApiError('');
     setSelectedPageGroup(null);
@@ -120,6 +140,19 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
                         placeholder='Enter Venue Category Name'
                       />
                       {errors.venueCategoryName && <div className="invalid-feedback">{errors.venueCategoryName}</div>}
+                    </div>
+                  </div>
+                  <div className="col-lg-3 col-md-6 col-sm-12">
+                    <div className="mb-3">
+                      <label htmlFor="venue_category_url" className="form-label">Venue Category URL</label>
+                      <input
+                        type="text"
+                        name="venueCategoryUrl"
+                        value={formData.venueCategoryUrl}
+                        className="form-control"
+                        placeholder='Auto-generated from name'
+                        disabled
+                      />
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-6 col-sm-12">

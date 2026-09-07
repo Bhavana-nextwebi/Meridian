@@ -32,6 +32,7 @@ const initialFormState = {
 const initialSectionFormState = {
   CtaTitle: "",
   CtaDescription: "",
+  ButtonText: "",
 };
 
 export const ExperienceSubcategoryEventDetails = () => {
@@ -44,8 +45,8 @@ export const ExperienceSubcategoryEventDetails = () => {
   const [isSaving, setIsSaving] = useState(false);
   const eventImageInputRef = useRef(null);
 
-  // Page-level "Call To Action" content, edited here since events are
-  // displayed alongside it on the experience subcategory page.
+  // Page-level "Call To Action" content (plus ButtonText), edited here since
+  // events are displayed alongside it on the experience subcategory page.
   const [pageRecord, setPageRecord] = useState(null);
   const [sectionFormData, setSectionFormData] = useState(initialSectionFormState);
   const [sectionLoading, setSectionLoading] = useState(true);
@@ -72,6 +73,7 @@ export const ExperienceSubcategoryEventDetails = () => {
         setSectionFormData({
           CtaTitle: data.ctaTitle || "",
           CtaDescription: data.ctaDescription || "",
+          ButtonText: data.buttonText || "",
         });
       }
     } catch (error) {
@@ -211,8 +213,8 @@ export const ExperienceSubcategoryEventDetails = () => {
 
   // The update endpoint expects the whole page record, so the rest of the
   // fields are carried over unchanged from what was last fetched, and only
-  // the Cta fields are overridden. No image fields belong to this section,
-  // so existing images on the page are naturally left untouched.
+  // the Cta/ButtonText fields are overridden. No image fields belong to this
+  // section, so existing images on the page are naturally left untouched.
   const handleSectionSubmit = async (e) => {
     e.preventDefault();
     if (!pageRecord) return;
@@ -223,10 +225,14 @@ export const ExperienceSubcategoryEventDetails = () => {
       payload.append("Id", pageRecord.id);
       payload.append("ExperienceSubcategoryName", pageRecord.experienceSubcategoryName || "");
       payload.append("BannerTitle", pageRecord.bannerTitle || "");
+      payload.append("BannerDesc", pageRecord.bannerDesc || "");
       payload.append("Title", pageRecord.title || "");
       payload.append("Description", pageRecord.description || "");
+      payload.append("WhyChooseTitle", pageRecord.whyChooseTitle || "");
+      payload.append("WhyChooseDesc", pageRecord.whyChooseDesc || "");
       payload.append("CtaTitle", sectionFormData.CtaTitle);
       payload.append("CtaDescription", sectionFormData.CtaDescription);
+      payload.append("ButtonText", sectionFormData.ButtonText);
       payload.append("LightsTitle", pageRecord.lightsTitle || "");
       payload.append("LightsSubTitle", pageRecord.lightsSubTitle || "");
       payload.append("LightsDescription", pageRecord.lightsDescription || "");
@@ -296,6 +302,17 @@ export const ExperienceSubcategoryEventDetails = () => {
                 className="form-control"
                 rows="3"
               ></textarea>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Button Text</label>
+              <input
+                type="text"
+                name="ButtonText"
+                value={sectionFormData.ButtonText}
+                placeholder="Enter Button Text"
+                onChange={handleSectionInputChange}
+                className="form-control"
+              />
             </div>
             <button type="submit" className="btn btn-secondary" disabled={isSectionSaving}>
               {isSectionSaving ? "Saving" : "Save Call To Action"}

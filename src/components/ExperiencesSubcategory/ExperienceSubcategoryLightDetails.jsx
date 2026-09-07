@@ -250,10 +250,14 @@ export const ExperienceSubcategoryLightDetails = () => {
       payload.append("Id", pageRecord.id);
       payload.append("ExperienceSubcategoryName", pageRecord.experienceSubcategoryName || "");
       payload.append("BannerTitle", pageRecord.bannerTitle || "");
+      payload.append("BannerDesc", pageRecord.bannerDesc || "");
       payload.append("Title", pageRecord.title || "");
       payload.append("Description", pageRecord.description || "");
+      payload.append("WhyChooseTitle", pageRecord.whyChooseTitle || "");
+      payload.append("WhyChooseDesc", pageRecord.whyChooseDesc || "");
       payload.append("CtaTitle", pageRecord.ctaTitle || "");
       payload.append("CtaDescription", pageRecord.ctaDescription || "");
+      payload.append("ButtonText", pageRecord.buttonText || "");
       payload.append("LightsTitle", sectionFormData.LightsTitle);
       payload.append("LightsSubTitle", sectionFormData.LightsSubTitle);
       payload.append("LightsDescription", sectionFormData.LightsDescription);
