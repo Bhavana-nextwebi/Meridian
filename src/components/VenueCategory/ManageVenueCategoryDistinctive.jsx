@@ -29,12 +29,12 @@ const initialDistinctiveFormState = {
   DisplayOrder: 0,
 };
 
-// Section3 Title / Desc / Image used to live on the main Venue Category
+// Section3 Title / Image used to live on the main Venue Category
 // Page form. They're edited here since they're displayed alongside the
-// distinctive items list on the venue page.
+// distinctive items list on the venue page. Section3Desc is no longer
+// editable from this form; it's carried over unchanged from pageRecord.
 const initialSectionFormState = {
   Section3Title: "",
-  Section3Desc: "",
   Section3Image: "",
   Section3ImagePreview: "",
 };
@@ -76,7 +76,6 @@ export const ManageVenueCategoryDistinctive = () => {
         setPageRecord(data);
         setSectionFormData({
           Section3Title: data.section3Title || "",
-          Section3Desc: data.section3Desc || "",
           Section3Image: "",
           Section3ImagePreview: getFullImageUrl(data.section3Image),
         });
@@ -207,10 +206,6 @@ export const ManageVenueCategoryDistinctive = () => {
       newErrors.Section3Title = "Title is required";
       valid = false;
     }
-    if (!sectionFormData.Section3Desc?.trim()) {
-      newErrors.Section3Desc = "Description is required";
-      valid = false;
-    }
 
     setSectionErrors(newErrors);
     return valid;
@@ -219,6 +214,8 @@ export const ManageVenueCategoryDistinctive = () => {
   // The update endpoint expects the whole page record, so the rest of the
   // fields are carried over unchanged from what was last fetched, and only
   // the Section3 fields (plus a new image, if chosen) are overridden.
+  // Section3Desc is no longer edited here, so it's carried over from
+  // pageRecord as-is.
   const handleSectionSubmit = async (e) => {
     e.preventDefault();
 
@@ -239,7 +236,7 @@ export const ManageVenueCategoryDistinctive = () => {
       payload.append("Section2Desc", pageRecord.section2Desc || "");
       payload.append("Section2Image", pageRecord.section2Image || "");
       payload.append("Section3Title", sectionFormData.Section3Title);
-      payload.append("Section3Desc", sectionFormData.Section3Desc);
+      payload.append("Section3Desc", pageRecord.section3Desc || "");
       payload.append("Section3Image", pageRecord.section3Image || "");
       payload.append("Section4Title", pageRecord.section4Title || "");
       payload.append("Section5Title", pageRecord.section5Title || "");
@@ -313,22 +310,6 @@ export const ManageVenueCategoryDistinctive = () => {
                 />
                 {sectionErrors.Section3Title && (
                   <div className="invalid-feedback">{sectionErrors.Section3Title}</div>
-                )}
-              </div>
-              <div className="mb-3">
-                <label className="form-label">
-                  Section 3 Description <span className="required-field">*</span>
-                </label>
-                <textarea
-                  name="Section3Desc"
-                  value={sectionFormData.Section3Desc}
-                  placeholder="Enter Section 3 Description"
-                  onChange={handleSectionInputChange}
-                  className={`form-control ${sectionErrors.Section3Desc ? "is-invalid" : ""}`}
-                  rows="3"
-                ></textarea>
-                {sectionErrors.Section3Desc && (
-                  <div className="invalid-feedback">{sectionErrors.Section3Desc}</div>
                 )}
               </div>
 
