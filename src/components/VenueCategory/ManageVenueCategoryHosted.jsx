@@ -4,6 +4,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
+import { Editor } from "@tinymce/tinymce-react";
+import { getTinyMceInit } from "../../utils/tinymceConfig";
+
 import {
   addVenueCategoryHosted,
   updateVenueCategoryHosted,
@@ -50,6 +53,9 @@ export const ManageVenueCategoryHosted = () => {
   const [sectionErrors, setSectionErrors] = useState({});
   const [sectionLoading, setSectionLoading] = useState(true);
   const [isSectionSaving, setIsSectionSaving] = useState(false);
+  // TinyMCE is an uncontrolled-ish editor (like the blog form), so its
+  // content is tracked separately and synced into sectionFormData.
+  const [section2DescContent, setSection2DescContent] = useState("");
 
   const loadHosted = async () => {
     setLoading(true);
@@ -73,6 +79,7 @@ export const ManageVenueCategoryHosted = () => {
           Section2Title: data.section2Title || "",
           Section2Desc: data.section2Desc || "",
         });
+        setSection2DescContent(data.section2Desc || "");
       }
     } catch (error) {
       handleErrors(error);
@@ -171,6 +178,12 @@ export const ManageVenueCategoryHosted = () => {
     const { name, value } = e.target;
     setSectionFormData((prevData) => ({ ...prevData, [name]: value }));
     setSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+  };
+
+  const handleSection2DescChange = (content) => {
+    setSection2DescContent(content);
+    setSectionFormData((prevData) => ({ ...prevData, Section2Desc: content }));
+    setSectionErrors((prevErrors) => ({ ...prevErrors, Section2Desc: "" }));
   };
 
   const validateSection = () => {
@@ -290,16 +303,18 @@ export const ManageVenueCategoryHosted = () => {
                 <label className="form-label">
                   Section 2 Description <span className="required-field">*</span>
                 </label>
-                <textarea
-                  name="Section2Desc"
-                  value={sectionFormData.Section2Desc}
-                  placeholder="Enter Section 2 Description"
-                  onChange={handleSectionInputChange}
-                  className={`form-control ${sectionErrors.Section2Desc ? "is-invalid" : ""}`}
-                  rows="3"
-                ></textarea>
-                {sectionErrors.Section2Desc && (
-                  <div className="invalid-feedback">{sectionErrors.Section2Desc}</div>
+                <Editor
+                  tinymceScriptSrc="/tinymce/tinymce.min.js"
+                  value={section2DescContent}
+                  init={getTinyMceInit()}
+                  onEditorChange={handleSection2DescChange}
+                />
+                {sectionErrors.Section2Desc ? (
+                  <div style={{ color: "#dc3545", fontSize: ".875em" }}>
+                    {sectionErrors.Section2Desc}
+                  </div>
+                ) : (
+                  ""
                 )}
               </div>
 
