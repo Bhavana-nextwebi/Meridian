@@ -17,6 +17,6 @@ export const fetchLandingPageEnquiries = async () => {
 // so this assumes it shares the same delete endpoint as contact enquiries.
 // Update the path here if a dedicated endpoint exists.
 export const deleteLandingPageEnquiry = async (id) => {
-  const response = await axiosInstance.delete(`contact-us/delete/${id}`, { headers });
+  const response = await axiosInstance.delete(`contact-us/delete-lp-enquiry/${id}`, { headers });
   return response.data;
 };
