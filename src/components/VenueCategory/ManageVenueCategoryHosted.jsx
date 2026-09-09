@@ -17,11 +17,13 @@ import {
   fetchVenueCategoryPageByGuid,
   updateVenueCategoryPage,
 } from "../../services/venueCategoryPageServices";
+import allImages from "../../assets/images-import";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
 import { Loading } from "../Common/OtherElements/Loading";
 import { TableDataStatusError } from "../Common/OtherElements/TableDataStatusError";
 import TableHeader from "../Common/TableComponent/TableHeader";
+import { getFullImageUrl } from "../../utils/imageUrl";
 
 const initialHostedFormState = {
   Id: null,
@@ -29,12 +31,14 @@ const initialHostedFormState = {
   DisplayOrder: 0,
 };
 
-// Section2 Title / Desc used to live on the main Venue Category Page form.
-// They're edited here since they're displayed alongside the hosted items
-// list on the venue page. This section has no image.
+// Section2 Title / Desc / Image used to live on the main Venue Category
+// Page form. They're edited here since they're displayed alongside the
+// hosted items list on the venue page.
 const initialSectionFormState = {
   Section2Title: "",
   Section2Desc: "",
+  Section2Image: "",
+  Section2ImagePreview: "",
 };
 
 export const ManageVenueCategoryHosted = () => {
@@ -78,6 +82,8 @@ export const ManageVenueCategoryHosted = () => {
         setSectionFormData({
           Section2Title: data.section2Title || "",
           Section2Desc: data.section2Desc || "",
+          Section2Image: "",
+          Section2ImagePreview: getFullImageUrl(data.section2Image),
         });
         setSection2DescContent(data.section2Desc || "");
       }
@@ -186,6 +192,18 @@ export const ManageVenueCategoryHosted = () => {
     setSectionErrors((prevErrors) => ({ ...prevErrors, Section2Desc: "" }));
   };
 
+  const handleSectionImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSectionFormData((prevData) => ({
+      ...prevData,
+      Section2Image: file,
+      Section2ImagePreview: URL.createObjectURL(file),
+    }));
+    setSectionErrors((prevErrors) => ({ ...prevErrors, Section2Image: "" }));
+  };
+
   const validateSection = () => {
     const newErrors = {};
     let valid = true;
@@ -206,7 +224,7 @@ export const ManageVenueCategoryHosted = () => {
 
   // The update endpoint expects the whole page record, so the rest of the
   // fields are carried over unchanged from what was last fetched, and only
-  // the Section2 fields are overridden. This section has no image.
+  // the Section2 fields (plus a new image, if chosen) are overridden.
   const handleSectionSubmit = async (e) => {
     e.preventDefault();
 
@@ -240,6 +258,13 @@ export const ManageVenueCategoryHosted = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKey", pageRecord.metaKey || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
+
+      // Only override Section2Image with a new file if the user picked one;
+      // otherwise the value already appended above (carried over from
+      // pageRecord) is left as-is so the existing image isn't wiped out.
+      if (sectionFormData.Section2Image) {
+        payload.set("Section2Image", sectionFormData.Section2Image);
+      }
 
       await updateVenueCategoryPage(payload);
       toast.success("Hosted section updated successfully!");
@@ -315,6 +340,39 @@ export const ManageVenueCategoryHosted = () => {
                   </div>
                 ) : (
                   ""
+                )}
+              </div>
+
+              <div className="d-flex flex-column align-items-center mb-3">
+                <label className="form-label">Section 2 Image</label>
+                <div className="profile-user position-relative d-inline-block mx-auto mb-2">
+                  <img
+                    src={sectionFormData.Section2ImagePreview || allImages.DefultImage}
+                    className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
+                    alt="Section 2 Preview"
+                  />
+                  <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
+                    <input
+                      id="section2Image"
+                      type="file"
+                      accept="image/*"
+                      className="profile-img-file-input"
+                      onChange={handleSectionImageChange}
+                    />
+                    <label htmlFor="section2Image" className="profile-photo-edit avatar-xs">
+                      <span className="avatar-title rounded-circle bg-light text-body shadow">
+                        <i className="ri-camera-fill"></i>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                <small className="text-muted">
+                  Recommended: square (1:1), e.g. 1024×1024px, max 3MB
+                </small>
+                {sectionErrors.Section2Image && (
+                  <div className="invalid-feedback d-block text-center">
+                    {sectionErrors.Section2Image}
+                  </div>
                 )}
               </div>
 
