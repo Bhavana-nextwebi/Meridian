@@ -440,8 +440,9 @@ export const AddExperiencePage = ({
         );
 
         resetForm();
-
-        navigate("/experience-pages");
+setTimeout(() => navigate("/experience-pages"), 3000);
+        
+        
       } else {
         await addExperiencePage(payload);
 

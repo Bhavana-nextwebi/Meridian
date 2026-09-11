@@ -308,7 +308,8 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
         await updateExperienceSubcategoryPage(payload);
         toast.success("Experience Subcategory Page updated successfully!");
         resetForm();
-        navigate("/manage-experience-subcategory");
+       
+        setTimeout(() => navigate("/manage-experience-subcategory"), 3000);
       } else {
         await addExperienceSubcategoryPage(payload);
         toast.success(

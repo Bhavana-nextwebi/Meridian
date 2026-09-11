@@ -240,7 +240,7 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
         await updateVenueCategoryPage(payload);
         toast.success("Venue Category Page updated successfully!");
         resetForm();
-        navigate("/venue-category-pages");
+        setTimeout(() => navigate("/venue-category-pages"), 3000);
       } else {
         await addVenueCategoryPage(payload);
         toast.success(
