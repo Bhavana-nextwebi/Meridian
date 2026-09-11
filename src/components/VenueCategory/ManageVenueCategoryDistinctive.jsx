@@ -4,6 +4,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
+import { Editor } from "@tinymce/tinymce-react";
+import { getTinyMceInit } from "../../utils/tinymceConfig";
+
 import {
   addVenueCategoryDistinctive,
   updateVenueCategoryDistinctive,
@@ -48,6 +51,12 @@ export const ManageVenueCategoryDistinctive = () => {
   const [formData, setFormData] = useState(initialDistinctiveFormState);
   const [errors, setErrors] = useState({});
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  // Description is edited via TinyMCE. We keep a separate `content` state
+  // (mirroring the AddBlogs pattern) because the Editor is an uncontrolled-ish
+  // component that's happiest being driven by its own `value`/onEditorChange
+  // pair rather than reading straight off formData on every keystroke.
+  const [content, setContent] = useState("");
 
   // Page-level "Section3" content.
   const [pageRecord, setPageRecord] = useState(null);
@@ -99,8 +108,15 @@ export const ManageVenueCategoryDistinctive = () => {
     setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
+  const handleEditorChange = (value) => {
+    setContent(value);
+    setFormData((prevData) => ({ ...prevData, Description: value }));
+    setErrors((prevErrors) => ({ ...prevErrors, Description: "" }));
+  };
+
   const resetForm = () => {
     setFormData(initialDistinctiveFormState);
+    setContent("");
     setErrors({});
   };
 
@@ -112,7 +128,7 @@ export const ManageVenueCategoryDistinctive = () => {
       newErrors.Title = "Title is required";
       valid = false;
     }
-    if (!formData.Description?.trim()) {
+    if (!formData.Description?.trim() || formData.Description === "<p></p>") {
       newErrors.Description = "Description is required";
       valid = false;
     }
@@ -162,6 +178,7 @@ export const ManageVenueCategoryDistinctive = () => {
       Description: item.description || "",
       DisplayOrder: item.displayOrder ?? 0,
     });
+    setContent(item.description || "");
     setErrors({});
   };
 
@@ -372,15 +389,17 @@ export const ManageVenueCategoryDistinctive = () => {
               <label className="form-label">
                 Description <span className="required-field">*</span>
               </label>
-              <textarea
-                name="Description"
-                value={formData.Description}
-                placeholder="Enter Description"
-                onChange={handleInputChange}
-                className={`form-control ${errors.Description ? "is-invalid" : ""}`}
-                rows="3"
-              ></textarea>
-              {errors.Description && <div className="invalid-feedback">{errors.Description}</div>}
+              <Editor
+                tinymceScriptSrc="/tinymce/tinymce.min.js"
+                value={content}
+                init={getTinyMceInit()}
+                onEditorChange={handleEditorChange}
+              />
+              {errors.Description && (
+                <div style={{ color: "#dc3545", fontSize: ".875em" }}>
+                  {errors.Description}
+                </div>
+              )}
             </div>
             <div className="mb-3 col-lg-3">
               <label className="form-label">Display Order</label>
@@ -423,7 +442,7 @@ export const ManageVenueCategoryDistinctive = () => {
                         <tr key={item.id}>
                           <td>{index + 1}</td>
                           <td>{item.title}</td>
-                          <td>{item.description}</td>
+                          <td dangerouslySetInnerHTML={{ __html: item.description }}></td>
                           <td>{item.displayOrder}</td>
                           <td>
                             <div className="d-flex gap-1">
