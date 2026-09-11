@@ -197,7 +197,8 @@ export const ExperienceSubcategoryWeddingDetails = () => {
   // Updates the main experience subcategory page record. Since the update endpoint takes
   // the full payload, everything from the last-fetched record is carried
   // through unchanged except WeddingSectionTitle; images are only re-sent if
-  // this screen ever lets you change them (it doesn't), so they're omitted.
+  // this screen ever lets you change them (it doesn't), so they're omitted -
+  // existing images on the page (including OgImage) are left untouched.
   const handleGalleryTitleSubmit = async (e) => {
     e.preventDefault();
     if (!experiencePageRecord) return;
@@ -229,6 +230,8 @@ export const ExperienceSubcategoryWeddingDetails = () => {
       payload.append("PageTitle", record.pageTitle || "");
       payload.append("MetaKeys", record.metaKeys || "");
       payload.append("MetaDesc", record.metaDesc || "");
+      payload.append("OgTitle", record.ogTitle || "");
+      payload.append("OgDesc", record.ogDesc || "");
 
       await updateExperienceSubcategoryPage(payload);
       toast.success("Gallery Title updated successfully!");

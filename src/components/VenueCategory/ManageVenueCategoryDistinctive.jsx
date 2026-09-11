@@ -266,6 +266,10 @@ export const ManageVenueCategoryDistinctive = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKey", pageRecord.metaKey || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
+      payload.append("OgTitle", pageRecord.ogTitle);
+payload.append("OgDesc", pageRecord.ogDesc);
+
+      
 
       if (sectionFormData.Section3Image) {
         payload.append("Section3Image", sectionFormData.Section3Image);

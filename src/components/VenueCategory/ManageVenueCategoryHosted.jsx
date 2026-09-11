@@ -258,6 +258,9 @@ export const ManageVenueCategoryHosted = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKey", pageRecord.metaKey || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
+        payload.append("OgTitle", pageRecord.ogTitle);
+payload.append("OgDesc", pageRecord.ogDesc);
+
 
       // Only override Section2Image with a new file if the user picked one;
       // otherwise the value already appended above (carried over from

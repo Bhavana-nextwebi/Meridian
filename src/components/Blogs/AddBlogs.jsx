@@ -38,6 +38,10 @@ const EMPTY_FORM_DATA = {
   PageTitle: "",
   MetaKeys: "",
   MetaDesc: "",
+  OgTitle: "",
+  OgDesc: "",
+  OgImage: "",
+  OgImagePreview: "",
 };
 
 export const AddBlogs = ({
@@ -133,6 +137,10 @@ export const AddBlogs = ({
               PageTitle: data.pageTitle || "",
               MetaKeys: data.metaKeys || "",
               MetaDesc: data.metaDesc || "",
+              OgTitle: data.ogTitle || "",
+              OgDesc: data.ogDesc || "",
+              OgImage: "",
+              OgImagePreview: getFullImageUrl(data.ogImage),
             });
             setContent(data.fullDescription || "<p>No description</p>");
           }
@@ -220,8 +228,13 @@ export const AddBlogs = ({
     payload.append("PageTitle", formData.PageTitle);
     payload.append("MetaKeys", formData.MetaKeys);
     payload.append("MetaDesc", formData.MetaDesc);
+    payload.append("OgTitle", formData.OgTitle);
+    payload.append("OgDesc", formData.OgDesc);
     if (formData.BlogImage) {
       payload.append("BlogImage", formData.BlogImage);
+    }
+    if (formData.OgImage) {
+      payload.append("OgImage", formData.OgImage);
     }
     if (id) {
       payload.append("Id", id);
@@ -307,6 +320,22 @@ export const AddBlogs = ({
       };
       return () => URL.revokeObjectURL(img.src);
     }
+  };
+
+  const handleOgImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setFormData((prevData) => ({
+      ...prevData,
+      OgImage: file,
+      OgImagePreview: URL.createObjectURL(file),
+    }));
+
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      OgImage: "",
+    }));
   };
 
   const handleAddNewClick = () => {
@@ -580,6 +609,77 @@ export const AddBlogs = ({
                     {errors.MetaDesc && (
                       <div className="invalid-feedback">
                         {errors.MetaDesc}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Og Title</label>
+                    <input
+                      type="text"
+                      name="OgTitle"
+                      value={formData.OgTitle}
+                      placeholder="Enter Og Title"
+                      onChange={handleInputChange}
+                      className={`form-control ${
+                        errors.OgTitle ? "is-invalid" : ""
+                      }`}
+                    />
+                    {errors.OgTitle && (
+                      <div className="invalid-feedback">
+                        {errors.OgTitle}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Og Description</label>
+                    <textarea
+                      name="OgDesc"
+                      value={formData.OgDesc}
+                      placeholder="Enter Og Description"
+                      onChange={handleInputChange}
+                      className={`form-control ${
+                        errors.OgDesc ? "is-invalid" : ""
+                      }`}
+                      rows="4"
+                    ></textarea>
+                    {errors.OgDesc && (
+                      <div className="invalid-feedback">
+                        {errors.OgDesc}
+                      </div>
+                    )}
+                  </div>
+                  <div className="d-flex flex-column align-items-center mb-3">
+                    <label className="form-label">Og Image</label>
+                    <div className="profile-user position-relative d-inline-block mx-auto mb-2">
+                      <img
+                        src={formData.OgImagePreview || allImages.DefultImage}
+                        className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
+                        alt="Og  Preview"
+                      />
+                      <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
+                        <input
+                          id="ogImage"
+                          type="file"
+                          accept="image/*"
+                          className="profile-img-file-input"
+                          onChange={handleOgImageChange}
+                        />
+                        <label
+                          htmlFor="ogImage"
+                          className="profile-photo-edit avatar-xs"
+                        >
+                          <span className="avatar-title rounded-circle bg-light text-body shadow">
+                            <i className="ri-camera-fill"></i>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                    <small className="text-muted">
+                      Recommended: 1200×630px, max 3MB
+                    </small>
+                    {errors.OgImage && (
+                      <div className="invalid-feedback d-block text-center">
+                        {errors.OgImage}
                       </div>
                     )}
                   </div>

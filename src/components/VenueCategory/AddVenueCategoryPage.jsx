@@ -42,6 +42,9 @@ const initialFormState = {
   PageTitle: "",
   MetaKey: "",
   MetaDesc: "",
+  OgTitle: "",
+  OgDesc: "",
+  OgImage: "",
 };
 
 export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, setEditMode }) => {
@@ -116,6 +119,10 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
               PageTitle: data.pageTitle || "",
               MetaKey: data.metaKey || "",
               MetaDesc: data.metaDesc || "",
+              OgTitle: data.ogTitle || "",
+              OgDesc: data.ogDesc || "",
+              OgImage: "",
+              OgImagePreview: getFullImageUrl(data.ogImage),
             });
             setVenueCategoryGuidState(data.venueCategoryGuid || null);
           }
@@ -204,7 +211,9 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
     payload.append("PageTitle", formData.PageTitle);
     payload.append("MetaKey", formData.MetaKey);
     payload.append("MetaDesc", formData.MetaDesc);
-
+    payload.append("OgTitle", formData.OgTitle);
+    payload.append("OgDesc", formData.OgDesc);
+   
     // Images: send the new file if picked, otherwise keep whatever was
     // already on the record (on update) so it isn't wiped out.
     if (formData.BannerImage) {
@@ -217,6 +226,12 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
       payload.append("CtaImage", formData.CtaImage);
     } else if (id && pageRecord) {
       payload.append("CtaImage", pageRecord.ctaImage || "");
+    }
+
+    if (formData.OgImage) {
+      payload.append("OgImage", formData.OgImage);
+    } else if (id && pageRecord) {
+      payload.append("OgImage", pageRecord.ogImage || "");
     }
 
     return payload;
@@ -565,6 +580,60 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
                       className="form-control"
                       rows="4"
                     ></textarea>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Og Title</label>
+                    <input
+                      type="text"
+                      name="OgTitle"
+                      value={formData.OgTitle}
+                      placeholder="Enter Og Title"
+                      onChange={handleInputChange}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Og Description</label>
+                    <textarea
+                      name="OgDesc"
+                      value={formData.OgDesc}
+                      placeholder="Enter Og Description"
+                      onChange={handleInputChange}
+                      className="form-control"
+                      rows="4"
+                    ></textarea>
+                  </div>
+                  <div className="d-flex flex-column align-items-center mb-3">
+                    <label className="form-label">Og Image</label>
+                    <div className="profile-user position-relative d-inline-block mx-auto mb-2">
+                      <img
+                        src={formData.OgImagePreview || allImages.DefultImage}
+                        className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
+                        alt="Og  Preview"
+                      />
+                      <div className="avatar-xs p-0 rounded-circle profile-photo-edit">
+                        <input
+                          id="ogImage"
+                          type="file"
+                          accept="image/*"
+                          className="profile-img-file-input"
+                          onChange={(e) => handleImageChange(e, "OgImage")}
+                        />
+                        <label htmlFor="ogImage" className="profile-photo-edit avatar-xs">
+                          <span className="avatar-title rounded-circle bg-light text-body shadow">
+                            <i className="ri-camera-fill"></i>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                    <small className="text-muted">
+                      Recommended: 1200×630px, max 3MB
+                    </small>
+                    {errors.OgImage && (
+                      <div className="invalid-feedback d-block text-center">
+                        {errors.OgImage}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

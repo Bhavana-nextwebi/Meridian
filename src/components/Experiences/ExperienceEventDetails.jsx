@@ -240,6 +240,10 @@ export const ExperienceEventDetails = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKeys", pageRecord.metaKeys || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
+       payload.append("OgTitle", pageRecord.ogTitle);
+          payload.append("OgDesc", pageRecord.ogDesc);
+
+      
 
       await updateExperiencePage(payload);
       toast.success("Call To Action section updated successfully!");

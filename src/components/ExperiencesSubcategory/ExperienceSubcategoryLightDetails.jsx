@@ -239,7 +239,8 @@ export const ExperienceSubcategoryLightDetails = () => {
   // The update endpoint expects the whole page record, so the rest of the
   // fields are carried over unchanged from what was last fetched, and only
   // the Lights fields are overridden. No image fields belong to this
-  // section, so existing images on the page are naturally left untouched.
+  // section, so existing images on the page (including OgImage) are
+  // naturally left untouched.
   const handleSectionSubmit = async (e) => {
     e.preventDefault();
     if (!pageRecord) return;
@@ -264,6 +265,8 @@ export const ExperienceSubcategoryLightDetails = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKeys", pageRecord.metaKeys || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
+      payload.append("OgTitle", pageRecord.ogTitle || "");
+      payload.append("OgDesc", pageRecord.ogDesc || "");
 
       await updateExperienceSubcategoryPage(payload);
       toast.success("Lights section updated successfully!");

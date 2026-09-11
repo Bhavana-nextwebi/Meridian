@@ -237,6 +237,9 @@ export const ExperienceServiceDetails = () => {
       payload.append("PageTitle", record.pageTitle || "");
       payload.append("MetaKeys", record.metaKeys || "");
       payload.append("MetaDesc", record.metaDesc || "");
+       payload.append("OgTitle", record.ogTitle);
+payload.append("OgDesc", record.ogDesc);
+
 
       await updateExperiencePage(payload);
       toast.success("Service Needs Title updated successfully!");

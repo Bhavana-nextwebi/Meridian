@@ -244,6 +244,9 @@ export const ManageVenueCategoryMoments = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKey", pageRecord.metaKey || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
+       payload.append("OgTitle", pageRecord.ogTitle);
+payload.append("OgDesc", pageRecord.ogDesc);
+
 
       await updateVenueCategoryPage(payload);
       toast.success("Moments section updated successfully!");
