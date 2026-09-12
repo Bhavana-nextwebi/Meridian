@@ -53,10 +53,23 @@ const getYouTubeEmbedUrl = (url) => {
 // (common for Vimeo, Dailymotion, etc.) instead of just a bare URL.
 const IFRAME_SRC_REGEX = /<iframe[^>]*\ssrc=["']([^"']+)["'][^>]*>/i;
 
+// Pasted embed markup often carries HTML-escaped entities (e.g. "&amp;"
+// between query params) since it was copied out of an HTML source view.
+// Decode those before the src is used as an actual URL, otherwise the
+// literal "&amp;" breaks query-string parsing wherever this URL is
+// consumed later (including on the public-facing page).
+const decodeHtmlEntities = (str) =>
+  str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
 const extractIframeSrc = (value) => {
   if (!value) return null;
   const match = value.match(IFRAME_SRC_REGEX);
-  return match ? match[1] : null;
+  return match ? decodeHtmlEntities(match[1]) : null;
 };
 
 // Resolves whatever was pasted into VideoUrl into something renderable:
@@ -342,10 +355,15 @@ export const AddAlbum = ({
         payload.append("AlbumVideo", formData.AlbumVideo);
       }
       if (formData.VideoSource === VIDEO_SOURCES.URL && formData.VideoUrl) {
-        // Store the resolved src rather than raw <iframe> markup, so the
-        // public-facing page just gets a clean URL to work with.
+        // Store a clean, directly-usable URL rather than raw pasted markup:
+        // prefer the canonical YouTube embed link when we can derive one,
+        // otherwise fall back to the decoded <iframe> src, otherwise the
+        // raw trimmed input itself.
         const raw = formData.VideoUrl.trim();
-        payload.append("VideoUrl", extractIframeSrc(raw) || raw);
+        const iframeSrc = extractIframeSrc(raw); // already HTML-entity decoded
+        const candidate = iframeSrc || raw;
+        const youtubeEmbed = getYouTubeEmbedUrl(candidate);
+        payload.append("VideoUrl", youtubeEmbed || candidate);
       }
     }
 
