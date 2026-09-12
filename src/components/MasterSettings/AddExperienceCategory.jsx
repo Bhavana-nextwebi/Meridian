@@ -14,6 +14,23 @@ const generateSlug = (value) =>
     .replace(/[^a-zA-Z0-9 ]/g, '')
     .replace(/\s+/g, '-');
 
+const IMAGE_BASE_URL = 'https://602.nxtai.dev/';
+
+// Prefixes a relative image path returned by the API with the base URL so the
+// edit-mode preview can load it. Leaves already-absolute URLs untouched.
+const getImagePreviewUrl = (path) => {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${IMAGE_BASE_URL}${path.replace(/^\/+/, '')}`;
+};
+
+const EMPTY_FORM = {
+  experienceCategoryName: '',
+  experienceCategoryUrl: '',
+  experienceCategoryShortDesc: '',
+  displayOrder: '',
+};
+
 const validateExperienceCategory = (formData) => {
   const errors = { experienceCategoryName: '', displayOrder: '' };
 
@@ -32,10 +49,16 @@ const validateExperienceCategory = (formData) => {
 };
 
 export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
-  const [formData, setFormData] = useState({ experienceCategoryName: '', experienceCategoryUrl: '', displayOrder: '' });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({ experienceCategoryName: '', displayOrder: '' });
   const [apiError, setApiError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  // The actual File object selected for upload (kept separate from formData
+  // since it isn't a plain form value).
+  const [imageFile, setImageFile] = useState(null);
+  // URL used to preview either the newly selected file or the existing image in edit mode.
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,17 +68,31 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
           setFormData({
             experienceCategoryName: data.experienceCategoryName || '',
             experienceCategoryUrl: data.experienceCategoryUrl || generateSlug(data.experienceCategoryName || ''),
+            experienceCategoryShortDesc: data.experienceCategoryShortDesc || '',
             displayOrder: data.displayOrder ?? '',
           });
+          setImageFile(null);
+          setImagePreview(getImagePreviewUrl(data.experienceCategoryImage));
         } catch (error) {
           handleErrors(error);
         }
       } else {
-        setFormData({ experienceCategoryName: '', experienceCategoryUrl: '', displayOrder: '' });
+        setFormData(EMPTY_FORM);
+        setImageFile(null);
+        setImagePreview('');
       }
     };
     fetchData();
   }, [editMode, initialData]);
+
+  // Revoke any object URL we created for a local file preview so we don't leak memory.
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,6 +108,20 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      return;
+    }
+    setImageFile(file);
+    setImagePreview((prev) => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev);
+      }
+      return URL.createObjectURL(file);
+    });
+  };
+
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     const { valid, errors: validationErrors } = validateExperienceCategory(formData);
@@ -81,6 +132,8 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
       const payload = {
         experienceCategoryName: formData.experienceCategoryName,
         experienceCategoryUrl: formData.experienceCategoryUrl,
+        experienceCategoryShortDesc: formData.experienceCategoryShortDesc,
+        experienceCategoryImage: imageFile,
         displayOrder: Number(formData.displayOrder),
       };
       try {
@@ -92,11 +145,13 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
           setEditMode(false);
         } else {
           setIsButtonDisabled(true);
-          await createExperienceCategory(payload.experienceCategoryName, payload.experienceCategoryUrl, payload.displayOrder);
+          await createExperienceCategory(payload);
           toast.success('Experience category added successfully!');
           setIsButtonDisabled(false);
         }
-        setFormData({ experienceCategoryName: '', experienceCategoryUrl: '', displayOrder: '' });
+        setFormData(EMPTY_FORM);
+        setImageFile(null);
+        setImagePreview('');
         if (onSuccess) onSuccess();
       } catch (error) {
         handleErrors(error);
@@ -105,12 +160,14 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
     } else {
       console.error('Validation errors:', validationErrors);
     }
-  }, [formData, editMode, initialData, onSuccess, setEditMode]);
+  }, [formData, imageFile, editMode, initialData, onSuccess, setEditMode]);
 
   const handleAddNewClick = () => {
-    setFormData({ experienceCategoryName: '', experienceCategoryUrl: '', displayOrder: '' });
+    setFormData(EMPTY_FORM);
     setErrors({ experienceCategoryName: '', displayOrder: '' });
     setApiError('');
+    setImageFile(null);
+    setImagePreview('');
     setSelectedPageGroup(null);
     setEditMode(false);
   };
@@ -126,7 +183,7 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
             </div>
 
             <div className="card-body p-4">
-              <form onSubmit={handleSubmit} method="POST">
+              <form onSubmit={handleSubmit} method="POST" encType="multipart/form-data">
                 <div className="row">
                   <div className="col-lg-3 col-md-6 col-sm-12">
                     <div className="mb-3">
@@ -168,6 +225,39 @@ export const AddExperienceCategory = ({ editMode = false, initialData = {}, onSu
                         min="0"
                       />
                       {errors.displayOrder && <div className="invalid-feedback">{errors.displayOrder}</div>}
+                    </div>
+                  </div>
+                  <div className="col-lg-3 col-md-6 col-sm-12">
+                    <div className="mb-3">
+                      <label htmlFor="experience_category_image" className="form-label">Experience Category Image</label>
+                      <input
+                        type="file"
+                        name="experienceCategoryImage"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="form-control"
+                      />
+                      {imagePreview && (
+                        <img
+                          src={imagePreview}
+                          alt="Experience category preview"
+                          className="mt-2"
+                          style={{ maxHeight: '80px', maxWidth: '100%', objectFit: 'contain' }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-lg-6 col-md-12">
+                    <div className="mb-3">
+                      <label htmlFor="experience_category_short_desc" className="form-label">Short Description</label>
+                      <textarea
+                        name="experienceCategoryShortDesc"
+                        value={formData.experienceCategoryShortDesc}
+                        onChange={handleInputChange}
+                        className="form-control"
+                        placeholder='Enter a short description'
+                        rows={2}
+                      />
                     </div>
                   </div>
                   <div className="col-lg-12">

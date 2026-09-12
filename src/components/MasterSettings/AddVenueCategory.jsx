@@ -14,6 +14,26 @@ const generateSlug = (value) =>
     .replace(/[^a-zA-Z0-9 ]/g, '')
     .replace(/\s+/g, '-');
 
+// Base host to prepend to image paths returned by the API (they come back
+// as relative paths, e.g. "uploads/venue/foo.png").
+const IMAGE_BASE_URL = 'https://602.nxtai.dev/';
+
+const buildImageUrl = (path) => {
+  if (!path) return '';
+  // Already a full/blob URL — don't double-prefix it.
+  if (/^(https?:)?\/\//i.test(path) || path.startsWith('blob:')) {
+    return path;
+  }
+  return `${IMAGE_BASE_URL}${path.replace(/^\/+/, '')}`;
+};
+
+const EMPTY_FORM = {
+  venueCategoryName: '',
+  venueCategoryUrl: '',
+  venueCategoryShortDesc: '',
+  displayOrder: '',
+};
+
 const validateVenueCategory = (formData) => {
   const errors = { venueCategoryName: '', displayOrder: '' };
 
@@ -32,10 +52,16 @@ const validateVenueCategory = (formData) => {
 };
 
 export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
-  const [formData, setFormData] = useState({ venueCategoryName: '', venueCategoryUrl: '', displayOrder: '' });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({ venueCategoryName: '', displayOrder: '' });
   const [apiError, setApiError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  // The actual File object selected for upload (kept separate from formData
+  // since it isn't a plain form value).
+  const [imageFile, setImageFile] = useState(null);
+  // URL used to preview either the newly selected file or the existing image in edit mode.
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,17 +71,31 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
           setFormData({
             venueCategoryName: data.venueCategoryName || '',
             venueCategoryUrl: data.venueCategoryUrl || generateSlug(data.venueCategoryName || ''),
+            venueCategoryShortDesc: data.venueCategoryShortDesc || '',
             displayOrder: data.displayOrder ?? '',
           });
+          setImageFile(null);
+          setImagePreview(buildImageUrl(data.venueCategoryImage));
         } catch (error) {
           handleErrors(error);
         }
       } else {
-        setFormData({ venueCategoryName: '', venueCategoryUrl: '', displayOrder: '' });
+        setFormData(EMPTY_FORM);
+        setImageFile(null);
+        setImagePreview('');
       }
     };
     fetchData();
   }, [editMode, initialData]);
+
+  // Revoke any object URL we created for a local file preview so we don't leak memory.
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,6 +111,20 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      return;
+    }
+    setImageFile(file);
+    setImagePreview((prev) => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev);
+      }
+      return URL.createObjectURL(file);
+    });
+  };
+
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     const { valid, errors: validationErrors } = validateVenueCategory(formData);
@@ -81,6 +135,8 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
       const payload = {
         venueCategoryName: formData.venueCategoryName,
         venueCategoryUrl: formData.venueCategoryUrl,
+        venueCategoryShortDesc: formData.venueCategoryShortDesc,
+        venueCategoryImage: imageFile,
         displayOrder: Number(formData.displayOrder),
       };
       try {
@@ -92,11 +148,13 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
           setEditMode(false);
         } else {
           setIsButtonDisabled(true);
-          await createVenueCategory(payload.venueCategoryName, payload.venueCategoryUrl, payload.displayOrder);
+          await createVenueCategory(payload);
           toast.success('Venue category added successfully!');
           setIsButtonDisabled(false);
         }
-        setFormData({ venueCategoryName: '', venueCategoryUrl: '', displayOrder: '' });
+        setFormData(EMPTY_FORM);
+        setImageFile(null);
+        setImagePreview('');
         if (onSuccess) onSuccess();
       } catch (error) {
         handleErrors(error);
@@ -105,12 +163,14 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
     } else {
       console.error('Validation errors:', validationErrors);
     }
-  }, [formData, editMode, initialData, onSuccess, setEditMode]);
+  }, [formData, imageFile, editMode, initialData, onSuccess, setEditMode]);
 
   const handleAddNewClick = () => {
-    setFormData({ venueCategoryName: '', venueCategoryUrl: '', displayOrder: '' });
+    setFormData(EMPTY_FORM);
     setErrors({ venueCategoryName: '', displayOrder: '' });
     setApiError('');
+    setImageFile(null);
+    setImagePreview('');
     setSelectedPageGroup(null);
     setEditMode(false);
   };
@@ -126,7 +186,7 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
             </div>
 
             <div className="card-body p-4">
-              <form onSubmit={handleSubmit} method="POST">
+              <form onSubmit={handleSubmit} method="POST" encType="multipart/form-data">
                 <div className="row">
                   <div className="col-lg-3 col-md-6 col-sm-12">
                     <div className="mb-3">
@@ -168,6 +228,39 @@ export const AddVenueCategory = ({ editMode = false, initialData = {}, onSuccess
                         min="0"
                       />
                       {errors.displayOrder && <div className="invalid-feedback">{errors.displayOrder}</div>}
+                    </div>
+                  </div>
+                  <div className="col-lg-3 col-md-6 col-sm-12">
+                    <div className="mb-3">
+                      <label htmlFor="venue_category_image" className="form-label">Venue Category Image</label>
+                      <input
+                        type="file"
+                        name="venueCategoryImage"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="form-control"
+                      />
+                      {imagePreview && (
+                        <img
+                          src={imagePreview}
+                          alt="Venue category preview"
+                          className="mt-2"
+                          style={{ maxHeight: '80px', maxWidth: '100%', objectFit: 'contain' }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-lg-6 col-md-12">
+                    <div className="mb-3">
+                      <label htmlFor="venue_category_short_desc" className="form-label">Short Description</label>
+                      <textarea
+                        name="venueCategoryShortDesc"
+                        value={formData.venueCategoryShortDesc}
+                        onChange={handleInputChange}
+                        className="form-control"
+                        placeholder='Enter a short description'
+                        rows={2}
+                      />
                     </div>
                   </div>
                   <div className="col-lg-12">

@@ -7,6 +7,27 @@ import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import ComponentHeader from '../Common/OtherElements/ComponentHeader';
 
+// Base host to prepend to image paths returned by the API (they come back
+// as relative paths, e.g. "uploads/experience/foo.png").
+const IMAGE_BASE_URL = 'https://602.nxtai.dev/';
+
+const buildImageUrl = (path) => {
+  if (!path) return '';
+  // Already a full/blob URL — don't double-prefix it.
+  if (/^(https?:)?\/\//i.test(path) || path.startsWith('blob:')) {
+    return path;
+  }
+  return `${IMAGE_BASE_URL}${path.replace(/^\/+/, '')}`;
+};
+
+const EMPTY_FORM = {
+  experienceCategoryId: '',
+  experienceSubcategoryName: '',
+  experienceSubcategoryUrl: '',
+  experienceSubcategoryShortDesc: '',
+  displayOrder: '',
+};
+
 const validateExperienceSubcategory = (formData) => {
   const errors = { experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' };
 
@@ -112,11 +133,17 @@ const experienceCategorySelectStyles = {
 };
 
 export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
-  const [formData, setFormData] = useState({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
   const [apiError, setApiError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [experienceCategories, setExperienceCategories] = useState([]);
+
+  // The actual File object selected for upload (kept separate from formData
+  // since it isn't a plain form value).
+  const [imageFile, setImageFile] = useState(null);
+  // URL used to preview either the newly selected file or the existing image in edit mode.
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     const loadExperienceCategories = async () => {
@@ -139,21 +166,49 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
             experienceCategoryId: data.experienceCategoryId || '',
             experienceSubcategoryName: data.experienceSubcategoryName || '',
             experienceSubcategoryUrl: data.experienceSubcategoryUrl || '',
+            experienceSubcategoryShortDesc: data.experienceSubcategoryShortDesc || '',
             displayOrder: data.displayOrder ?? '',
           });
+          setImageFile(null);
+          setImagePreview(buildImageUrl(data.experienceSubcategoryImage));
         } catch (error) {
           handleErrors(error);
         }
       } else {
-        setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
+        setFormData(EMPTY_FORM);
+        setImageFile(null);
+        setImagePreview('');
       }
     };
     fetchData();
   }, [editMode, initialData]);
 
+  // Revoke any object URL we created for a local file preview so we don't leak memory.
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      return;
+    }
+    setImageFile(file);
+    setImagePreview((prev) => {
+      if (prev && prev.startsWith('blob:')) {
+        URL.revokeObjectURL(prev);
+      }
+      return URL.createObjectURL(file);
+    });
   };
 
   const categoryOptions = experienceCategories.map((category) => ({
@@ -186,8 +241,11 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
           setIsButtonDisabled(true);
           await updateExperienceSubcategory({
             id: initialData.id,
+            experienceCategoryId: Number(formData.experienceCategoryId),
             experienceSubcategoryName: formData.experienceSubcategoryName,
             experienceSubcategoryUrl: formData.experienceSubcategoryUrl,
+            experienceSubcategoryShortDesc: formData.experienceSubcategoryShortDesc,
+            experienceSubcategoryImage: imageFile,
             displayOrder: Number(formData.displayOrder),
           });
           toast.success('Experience subcategory updated successfully!');
@@ -195,16 +253,20 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
           setEditMode(false);
         } else {
           setIsButtonDisabled(true);
-          await createExperienceSubcategory(
-            Number(formData.experienceCategoryId),
-            formData.experienceSubcategoryName,
-            formData.experienceSubcategoryUrl,
-            Number(formData.displayOrder)
-          );
+          await createExperienceSubcategory({
+            experienceCategoryId: Number(formData.experienceCategoryId),
+            experienceSubcategoryName: formData.experienceSubcategoryName,
+            experienceSubcategoryUrl: formData.experienceSubcategoryUrl,
+            experienceSubcategoryShortDesc: formData.experienceSubcategoryShortDesc,
+            experienceSubcategoryImage: imageFile,
+            displayOrder: Number(formData.displayOrder),
+          });
           toast.success('Experience subcategory added successfully!');
           setIsButtonDisabled(false);
         }
-        setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
+        setFormData(EMPTY_FORM);
+        setImageFile(null);
+        setImagePreview('');
         if (onSuccess) onSuccess();
       } catch (error) {
         handleErrors(error);
@@ -213,12 +275,14 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
     } else {
       console.error('Validation errors:', validationErrors);
     }
-  }, [formData, editMode, initialData, onSuccess, setEditMode]);
+  }, [formData, imageFile, editMode, initialData, onSuccess, setEditMode]);
 
   const handleAddNewClick = () => {
-    setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
+    setFormData(EMPTY_FORM);
     setErrors({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
     setApiError('');
+    setImageFile(null);
+    setImagePreview('');
     setSelectedPageGroup(null);
     setEditMode(false);
   };
@@ -234,7 +298,7 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
             </div>
 
             <div className="card-body p-4">
-              <form onSubmit={handleSubmit} method="POST">
+              <form onSubmit={handleSubmit} method="POST" encType="multipart/form-data">
                 <div className="row">
                   <div className="col-lg-3 col-md-6 col-sm-12">
                     <div className="mb-3">
@@ -301,6 +365,39 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
                         min="0"
                       />
                       {errors.displayOrder && <div className="invalid-feedback">{errors.displayOrder}</div>}
+                    </div>
+                  </div>
+                  <div className="col-lg-3 col-md-6 col-sm-12">
+                    <div className="mb-3">
+                      <label htmlFor="experience_subcategory_image" className="form-label">Experience Subcategory Image</label>
+                      <input
+                        type="file"
+                        name="experienceSubcategoryImage"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="form-control"
+                      />
+                      {imagePreview && (
+                        <img
+                          src={imagePreview}
+                          alt="Experience subcategory preview"
+                          className="mt-2"
+                          style={{ maxHeight: '80px', maxWidth: '100%', objectFit: 'contain' }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-lg-6 col-md-12">
+                    <div className="mb-3">
+                      <label htmlFor="experience_subcategory_short_desc" className="form-label">Short Description</label>
+                      <textarea
+                        name="experienceSubcategoryShortDesc"
+                        value={formData.experienceSubcategoryShortDesc}
+                        onChange={handleInputChange}
+                        className="form-control"
+                        placeholder='Enter a short description'
+                        rows={2}
+                      />
                     </div>
                   </div>
                   <div className="col-lg-12">
