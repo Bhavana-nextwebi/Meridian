@@ -319,30 +319,31 @@ payload.append("OgDesc", pageRecord.ogDesc);
                 <label className="form-label">
                   Section 5 Description <span className="required-field">*</span>
                 </label>
-                <Editor
-                  apiKey={TINYMCE_API_KEY}
-                  value={sectionFormData.Section5Desc}
-                  onEditorChange={handleSection5DescChange}
-                  init={{
-                    height: 300,
-                    menubar: false,
-                    branding: false,
-                    plugins: [
-                      "advlist",
-                      "autolink",
-                      "lists",
-                      "link",
-                      "charmap",
-                      "preview",
-                      "searchreplace",
-                      "visualblocks",
-                      "wordcount",
-                    ],
-                    toolbar:
-                      "undo redo | formatselect | bold italic underline | " +
-                      "alignleft aligncenter alignright | bullist numlist | link | removeformat",
-                  }}
-                />
+               <Editor
+  apiKey={TINYMCE_API_KEY}
+  value={sectionFormData.Section5Desc}
+  onEditorChange={handleSection5DescChange}
+  init={{
+    height: 300,
+    menubar: false,
+    branding: false,
+    plugins: [
+      "advlist",
+      "autolink",
+      "lists",
+      "link",
+      "charmap",
+      "preview",
+      "searchreplace",
+      "visualblocks",
+      "wordcount",
+      "code",
+    ],
+    toolbar:
+      "undo redo | formatselect | bold italic underline | " +
+      "alignleft aligncenter alignright | bullist numlist | link | removeformat | code",
+  }}
+/>
                 {sectionErrors.Section5Desc && (
                   <div className="invalid-feedback d-block">{sectionErrors.Section5Desc}</div>
                 )}

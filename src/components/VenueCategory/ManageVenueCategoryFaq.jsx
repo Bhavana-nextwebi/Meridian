@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
+import { Editor } from "@tinymce/tinymce-react";
 
 import {
   addVenueCategoryFaq,
@@ -19,6 +20,7 @@ import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
 import { Loading } from "../Common/OtherElements/Loading";
 import { TableDataStatusError } from "../Common/OtherElements/TableDataStatusError";
 import TableHeader from "../Common/TableComponent/TableHeader";
+import { getTinyMceInit } from "../../utils/tinymceConfig";
 
 const initialFaqFormState = {
   Id: null,
@@ -31,6 +33,14 @@ const initialFaqFormState = {
 // here since it's displayed alongside the FAQ list on the venue page.
 const initialFaqSectionFormState = {
   FaqDesc: "",
+};
+
+// TinyMCE's "empty" state is still markup like "<p><br></p>", not "";
+// strip tags first when deciding whether rich text was actually filled in.
+const isFaqDescEmpty = (html) => {
+  if (!html) return true;
+  const stripped = html.replace(/<[^>]*>/g, "").trim();
+  return stripped.length === 0;
 };
 
 export const ManageVenueCategoryFaq = () => {
@@ -178,11 +188,19 @@ export const ManageVenueCategoryFaq = () => {
     setFaqSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
   };
 
+  // TinyMCE's onEditorChange gives back the HTML content directly (no
+  // event object), so it needs its own handler instead of reusing
+  // handleFaqSectionInputChange.
+  const handleFaqDescChange = (content) => {
+    setFaqSectionFormData((prevData) => ({ ...prevData, FaqDesc: content }));
+    setFaqSectionErrors((prevErrors) => ({ ...prevErrors, FaqDesc: "" }));
+  };
+
   const validateFaqSection = () => {
     const newErrors = {};
     let valid = true;
 
-    if (!faqSectionFormData.FaqDesc?.trim()) {
+    if (isFaqDescEmpty(faqSectionFormData.FaqDesc)) {
       newErrors.FaqDesc = "FAQ Description is required";
       valid = false;
     }
@@ -277,16 +295,19 @@ payload.append("OgDesc", pageRecord.ogDesc);
                 <label className="form-label">
                   FAQ Description <span className="required-field">*</span>
                 </label>
-                <textarea
-                  name="FaqDesc"
+                <Editor
+                  tinymceScriptSrc="/tinymce/tinymce.min.js"
                   value={faqSectionFormData.FaqDesc}
-                  placeholder="Enter FAQ Description"
-                  onChange={handleFaqSectionInputChange}
-                  className={`form-control ${faqSectionErrors.FaqDesc ? "is-invalid" : ""}`}
-                  rows="3"
-                ></textarea>
+                  init={getTinyMceInit()}
+                  onEditorChange={handleFaqDescChange}
+                />
                 {faqSectionErrors.FaqDesc && (
-                  <div className="invalid-feedback">{faqSectionErrors.FaqDesc}</div>
+                  <div
+                    style={{ color: "#dc3545", fontSize: ".875em" }}
+                    className="mt-1"
+                  >
+                    {faqSectionErrors.FaqDesc}
+                  </div>
                 )}
               </div>
 
