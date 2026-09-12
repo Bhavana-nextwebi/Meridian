@@ -21,7 +21,10 @@ import { getTinyMceInit } from "../../utils/tinymceConfig";
 // WeddingSectionTitle, and SectionNeedsTitle are still part of formData
 // (and still sent on submit) but are managed from the Events, Light,
 // Wedding, and Services screens instead. ButtonText specifically is edited
-// alongside Call To Action content on the Events screen.
+// alongside Call To Action content on the Events screen. CardTitle is
+// likewise managed from the Cards screen but must still be carried through
+// on every submit from this form, since the update endpoint replaces the
+// whole record - omitting it here would wipe out whatever was saved there.
 const initialFormState = {
   ExperienceCategoryId: "",
   ExperienceSubcategoryId: "",
@@ -43,6 +46,7 @@ const initialFormState = {
   LightsDescription: "",
   SectionNeedsTitle: "",
   WeddingSectionTitle: "",
+  CardTitle: "",
   PageTitle: "",
   MetaKeys: "",
   MetaDesc: "",
@@ -156,6 +160,7 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
             MetaDesc: data.metaDesc || "",
             OgTitle: data.ogTitle || "",
             OgDesc: data.ogDesc || "",
+            CardTitle: data.cardTitle || "",
             OgImage: "",
             OgImagePreview: getFullImageUrl(data.ogImage),
           });
@@ -237,7 +242,7 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
     const newErrors = {};
     let valid = true;
 
-    if (!id && !formData.ExperienceSubcategoryId) {
+    if (!formData.ExperienceSubcategoryId) {
       newErrors.ExperienceSubcategoryId = "Experience Subcategory is required";
       valid = false;
     }
@@ -260,9 +265,10 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
 
   const buildSubmissionPayload = () => {
     const payload = new FormData();
-    if (!id) {
-      payload.append("ExperienceSubcategoryId", formData.ExperienceSubcategoryId);
-    }
+    // ExperienceSubcategoryId is now sent on both add and update, since the
+    // fields are editable in edit mode too - previously this was only sent
+    // when adding, which silently ignored any change made while updating.
+    payload.append("ExperienceSubcategoryId", formData.ExperienceSubcategoryId);
     payload.append("ExperienceSubcategoryName", formData.ExperienceSubcategoryName);
     payload.append("BannerTitle", formData.BannerTitle);
     payload.append("BannerDesc", formData.BannerDesc);
@@ -278,6 +284,11 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
     payload.append("LightsDescription", formData.LightsDescription);
     payload.append("SectionNeedsTitle", formData.SectionNeedsTitle);
     payload.append("WeddingSectionTitle", formData.WeddingSectionTitle);
+    // CardTitle is managed from the separate Cards screen, but must still be
+    // resent here on every save from this form. The update endpoint
+    // replaces the whole record, so leaving this out wipes out whatever was
+    // saved from the Cards screen.
+    payload.append("CardTitle", formData.CardTitle || "");
     payload.append("PageTitle", formData.PageTitle);
     payload.append("MetaKeys", formData.MetaKeys);
     payload.append("MetaDesc", formData.MetaDesc);
@@ -319,8 +330,8 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
       if (id) {
         await updateExperienceSubcategoryPage(payload);
         toast.success("Experience Subcategory Page updated successfully!");
-        resetForm();
-       
+        // Don't reset here - the form is about to navigate away anyway, and
+        // resetting first just blanks every field for the delay below.
         setTimeout(() => navigate("/manage-experience-subcategory"), 3000);
       } else {
         await addExperienceSubcategoryPage(payload);
@@ -385,7 +396,6 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
                         name="ExperienceCategoryId"
                         value={formData.ExperienceCategoryId}
                         onChange={handleInputChange}
-                        disabled={!!id}
                         className="form-select"
                       >
                         <option value="">All Categories</option>
@@ -404,7 +414,6 @@ export const AddExperienceSubcategoryPage = ({ editMode = false, setSelectedPage
                         name="ExperienceSubcategoryId"
                         value={formData.ExperienceSubcategoryId}
                         onChange={handleInputChange}
-                        disabled={!!id}
                         className={`form-select ${
                           errors.ExperienceSubcategoryId ? "is-invalid" : ""
                         }`}

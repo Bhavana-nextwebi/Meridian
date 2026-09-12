@@ -239,6 +239,9 @@ export const ExperienceServiceDetails = () => {
       payload.append("MetaDesc", record.metaDesc || "");
        payload.append("OgTitle", record.ogTitle);
 payload.append("OgDesc", record.ogDesc);
+ payload.append("SchemaMarkup",record.schemaMarkup ||"");
+  payload.append("CardTitle",record.cardTitle);
+          
 
 
       await updateExperiencePage(payload);

@@ -42,6 +42,7 @@ const EMPTY_FORM_DATA = {
   OgDesc: "",
   OgImage: "",
   OgImagePreview: "",
+  SchemaMarkup: "",
 };
 
 export const AddBlogs = ({
@@ -141,6 +142,7 @@ export const AddBlogs = ({
               OgDesc: data.ogDesc || "",
               OgImage: "",
               OgImagePreview: getFullImageUrl(data.ogImage),
+              SchemaMarkup: data.schemaMarkup || "",
             });
             setContent(data.fullDescription || "<p>No description</p>");
           }
@@ -230,6 +232,7 @@ export const AddBlogs = ({
     payload.append("MetaDesc", formData.MetaDesc);
     payload.append("OgTitle", formData.OgTitle);
     payload.append("OgDesc", formData.OgDesc);
+    payload.append("SchemaMarkup", formData.SchemaMarkup);
     if (formData.BlogImage) {
       payload.append("BlogImage", formData.BlogImage);
     }
@@ -645,6 +648,29 @@ export const AddBlogs = ({
                     {errors.OgDesc && (
                       <div className="invalid-feedback">
                         {errors.OgDesc}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Schema Markup</label>
+                    <textarea
+                      name="SchemaMarkup"
+                      value={formData.SchemaMarkup}
+                      placeholder="Enter Schema Markup (JSON-LD)"
+                      onChange={handleInputChange}
+                      className={`form-control ${
+                        errors.SchemaMarkup ? "is-invalid" : ""
+                      }`}
+                      rows="10"
+                      style={{
+                        minHeight: "220px",
+                        fontFamily: "monospace",
+                        fontSize: "0.85rem",
+                      }}
+                    ></textarea>
+                    {errors.SchemaMarkup && (
+                      <div className="invalid-feedback">
+                        {errors.SchemaMarkup}
                       </div>
                     )}
                   </div>

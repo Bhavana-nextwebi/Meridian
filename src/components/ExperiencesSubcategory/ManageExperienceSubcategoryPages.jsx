@@ -243,6 +243,7 @@ export const ManageExperienceSubcategoryPages = () => {
                           paginatedPages.map((item, index) => (
                             <tr key={item.id}>
                               <td>{(currentPage - 1) * entriesPerPage + index + 1}</td>
+                              
                               <td>{item.experienceSubcategoryName}</td>
                               <td>{item.title}</td>
                               <td>{item.bannerTitle}</td>

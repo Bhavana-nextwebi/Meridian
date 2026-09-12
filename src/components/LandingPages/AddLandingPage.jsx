@@ -34,6 +34,7 @@ export const AddLandingPage = ({
     OgTitle: "",
     OgDesc: "",
     OgImage: "",
+    SchemaMarkup: "",
     BanquetHallTitle: "",
     BanquetHallSubtitle: "",
     Experience: "",
@@ -94,6 +95,7 @@ export const AddLandingPage = ({
               OgDesc: data.ogDesc || "",
               OgImage: "",
               OgImagePreview: getFullImageUrl(data.ogImage),
+              SchemaMarkup: data.schemaMarkup || "",
               BanquetHallTitle: data.banquetHallTitle || "",
               BanquetHallSubtitle: data.banquetHallSubtitle || "",
               Experience: data.experience || "",
@@ -206,6 +208,7 @@ export const AddLandingPage = ({
     payload.append("MetaDesc", formData.MetaDesc);
     payload.append("OgTitle", formData.OgTitle);
     payload.append("OgDesc", formData.OgDesc);
+    payload.append("SchemaMarkup", formData.SchemaMarkup);
     payload.append("BanquetHallTitle", formData.BanquetHallTitle);
     payload.append("BanquetHallSubtitle", formData.BanquetHallSubtitle);
     payload.append("Experience", formData.Experience);
@@ -620,6 +623,21 @@ export const AddLandingPage = ({
                     ></textarea>
                     {errors.OgDesc && (
                       <div className="invalid-feedback">{errors.OgDesc}</div>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Schema Markup</label>
+                    <textarea
+                      name="SchemaMarkup"
+                      value={formData.SchemaMarkup}
+                      placeholder="Enter Schema Markup (JSON-LD)"
+                      onChange={handleInputChange}
+                      className={`form-control ${errors.SchemaMarkup ? "is-invalid" : ""}`}
+                      rows="10"
+                      style={{ minHeight: "220px", fontFamily: "monospace", fontSize: "0.85rem" }}
+                    ></textarea>
+                    {errors.SchemaMarkup && (
+                      <div className="invalid-feedback">{errors.SchemaMarkup}</div>
                     )}
                   </div>
                   <div className="d-flex flex-column align-items-center mb-3">

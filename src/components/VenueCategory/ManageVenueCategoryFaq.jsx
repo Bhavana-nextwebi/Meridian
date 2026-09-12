@@ -241,6 +241,7 @@ export const ManageVenueCategoryFaq = () => {
       payload.append("MetaDesc", pageRecord.metaDesc || "");
       payload.append("OgTitle", pageRecord.ogTitle || "");
       payload.append("OgDesc", pageRecord.ogDesc || "");
+      payload.append("SchemaMarkup",pageRecord.schemaMarkup ||"")
 
       await updateVenueCategoryPage(payload);
       toast.success("FAQ description updated successfully!");

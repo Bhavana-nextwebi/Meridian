@@ -45,6 +45,7 @@ const initialFormState = {
   OgTitle: "",
   OgDesc: "",
   OgImage: "",
+  SchemaMarkup: "",
 };
 
 export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, setEditMode }) => {
@@ -123,6 +124,7 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
               OgDesc: data.ogDesc || "",
               OgImage: "",
               OgImagePreview: getFullImageUrl(data.ogImage),
+              SchemaMarkup: data.schemaMarkup || "",
             });
             setVenueCategoryGuidState(data.venueCategoryGuid || null);
           }
@@ -213,6 +215,7 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
     payload.append("MetaDesc", formData.MetaDesc);
     payload.append("OgTitle", formData.OgTitle);
     payload.append("OgDesc", formData.OgDesc);
+    payload.append("SchemaMarkup", formData.SchemaMarkup);
    
     // Images: send the new file if picked, otherwise keep whatever was
     // already on the record (on update) so it isn't wiped out.
@@ -602,6 +605,21 @@ export const AddVenueCategoryPage = ({ editMode = false, setSelectedPageGroup, s
                       className="form-control"
                       rows="4"
                     ></textarea>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Schema Markup</label>
+                    <textarea
+                      name="SchemaMarkup"
+                      value={formData.SchemaMarkup}
+                      placeholder="Enter Schema Markup (JSON-LD)"
+                      onChange={handleInputChange}
+                      className={`form-control ${errors.SchemaMarkup ? "is-invalid" : ""}`}
+                      rows="10"
+                      style={{ minHeight: "220px", fontFamily: "monospace", fontSize: "0.85rem" }}
+                    ></textarea>
+                    {errors.SchemaMarkup && (
+                      <div className="invalid-feedback">{errors.SchemaMarkup}</div>
+                    )}
                   </div>
                   <div className="d-flex flex-column align-items-center mb-3">
                     <label className="form-label">Og Image</label>

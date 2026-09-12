@@ -255,6 +255,7 @@ export const ManageVenueCategoryGallery = () => {
       payload.append("MetaDesc", pageRecord.metaDesc || "");
        payload.append("OgTitle", pageRecord.ogTitle);
 payload.append("OgDesc", pageRecord.ogDesc);
+payload.append("SchemaMarkup",pageRecord.schemaMarkup ||"")
 
       await updateVenueCategoryPage(payload);
       toast.success("Intro section updated successfully!");

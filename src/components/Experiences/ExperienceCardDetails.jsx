@@ -9,6 +9,10 @@ import {
   fetchExperienceCardsByExperienceGuid,
   deleteExperienceCard,
 } from "../../services/experienceCardServices";
+import {
+  fetchExperiencePageByGuid,
+  updateExperiencePage,
+} from "../../services/experiencePageServices";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
 import { Loading } from "../Common/OtherElements/Loading";
@@ -22,6 +26,10 @@ const initialFormState = {
   DisplayOrder: "",
 };
 
+const initialSectionFormState = {
+  CardTitle: "",
+};
+
 export const ExperienceCardDetails = () => {
   const { experienceGuid } = useParams();
   const [cards, setCards] = useState([]);
@@ -30,6 +38,13 @@ export const ExperienceCardDetails = () => {
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Page-level "Card section" content, edited here since individual card
+  // items are displayed alongside it on the experience page.
+  const [pageRecord, setPageRecord] = useState(null);
+  const [sectionFormData, setSectionFormData] = useState(initialSectionFormState);
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [isSectionSaving, setIsSectionSaving] = useState(false);
 
   const loadCards = async () => {
     setLoading(true);
@@ -43,8 +58,26 @@ export const ExperienceCardDetails = () => {
     }
   };
 
+  const loadSection = async () => {
+    setSectionLoading(true);
+    try {
+      const data = await fetchExperiencePageByGuid(experienceGuid);
+      if (data) {
+        setPageRecord(data);
+        setSectionFormData({
+          CardTitle: data.cardTitle || "",
+        });
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setSectionLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadCards();
+    loadSection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienceGuid]);
 
@@ -142,6 +175,59 @@ export const ExperienceCardDetails = () => {
     }
   };
 
+  // --- Card section (page-level) handlers ---
+
+  const handleSectionInputChange = (e) => {
+    const { name, value } = e.target;
+    setSectionFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // The update endpoint expects the whole page record, so the rest of the
+  // fields are carried over unchanged from what was last fetched, and only
+  // the Card fields are overridden. No image fields belong to this section,
+  // so existing images on the page are naturally left untouched.
+  const handleSectionSubmit = async (e) => {
+    e.preventDefault();
+    if (!pageRecord) return;
+
+    setIsSectionSaving(true);
+    try {
+      const payload = new FormData();
+      payload.append("Id", pageRecord.id);
+      payload.append("ExperienceCategoryId", pageRecord.experienceCategoryId);
+      payload.append("ExperienceCategoryName", pageRecord.experienceCategoryName || "");
+      payload.append("BannerTitle", pageRecord.bannerTitle || "");
+      payload.append("BannerDesc", pageRecord.bannerDesc || "");
+      payload.append("Title", pageRecord.title || "");
+      payload.append("Description", pageRecord.description || "");
+      payload.append("ButtonText", pageRecord.buttonText || "");
+      payload.append("CtaTitle", pageRecord.ctaTitle || "");
+      payload.append("CtaDescription", pageRecord.ctaDescription || "");
+      payload.append("WhyChooseTitle", pageRecord.whyChooseTitle || "");
+      payload.append("WhyChooseDesc", pageRecord.whyChooseDesc || "");
+      payload.append("LightsTitle", pageRecord.lightsTitle || "");
+      payload.append("LightsSubTitle", pageRecord.lightsSubTitle || "");
+      payload.append("LightsDescription", pageRecord.lightsDescription || "");
+      payload.append("CardTitle", sectionFormData.CardTitle);
+      payload.append("SectionNeedsTitle", pageRecord.sectionNeedsTitle || "");
+      payload.append("WeddingSectionTitle", pageRecord.weddingSectionTitle || "");
+      payload.append("PageTitle", pageRecord.pageTitle || "");
+      payload.append("MetaKeys", pageRecord.metaKeys || "");
+      payload.append("MetaDesc", pageRecord.metaDesc || "");
+      payload.append("OgTitle", pageRecord.ogTitle);
+      payload.append("OgDesc", pageRecord.ogDesc);
+      payload.append("SchemaMarkup", pageRecord.schemaMarkup || "");
+
+      await updateExperiencePage(payload);
+      toast.success("Card section updated successfully!");
+      loadSection();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSectionSaving(false);
+    }
+  };
+
   return (
     <>
       <div className="row">
@@ -166,6 +252,34 @@ export const ExperienceCardDetails = () => {
       </div>
 
       <div className="card mt-xxl-n5 p-3">
+        <div className="card-header-wrapper p-1">
+          <h5 className="blogs-heading">Card Section</h5>
+        </div>
+        {sectionLoading ? (
+          <Loading />
+        ) : (
+          <form onSubmit={handleSectionSubmit} className="mt-3">
+            <div className="row">
+              <div className="mb-3 col-lg-6">
+                <label className="form-label">Card Title</label>
+                <input
+                  type="text"
+                  name="CardTitle"
+                  value={sectionFormData.CardTitle}
+                  placeholder="Enter Card Title"
+                  onChange={handleSectionInputChange}
+                  className="form-control"
+                />
+              </div>
+            </div>
+            <button type="submit" className="btn btn-secondary" disabled={isSectionSaving}>
+              {isSectionSaving ? "Saving" : "Save Card Section"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className="card mt-3 p-3">
         <div className="card-header-wrapper p-1">
           <h5 className="blogs-heading">{editingId ? "Edit Card" : "Add Card"}</h5>
         </div>

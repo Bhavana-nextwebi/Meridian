@@ -242,6 +242,9 @@ export const ExperienceEventDetails = () => {
       payload.append("MetaDesc", pageRecord.metaDesc || "");
        payload.append("OgTitle", pageRecord.ogTitle);
           payload.append("OgDesc", pageRecord.ogDesc);
+           payload.append("SchemaMarkup",pageRecord.schemaMarkup ||"");
+           payload.append("CardTitle",pageRecord.cardTitle);
+          
 
       
 

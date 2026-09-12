@@ -51,6 +51,7 @@ const initialFormState = {
   OgTitle: "",
   OgDesc: "",
   OgImage: "",
+  SchemaMarkup: "",
 };
 
 // TinyMCE's "empty" state is still markup like "<p><br></p>", not "";
@@ -168,6 +169,8 @@ export const AddExperiencePage = ({
               OgDesc: data.ogDesc || "",
               OgImage: "",
               OgImagePreview: getFullImageUrl(data.ogImage),
+
+              SchemaMarkup: data.schemaMarkup || "",
             });
 
             setExperienceGuid(data.experienceGuid || null);
@@ -403,6 +406,11 @@ export const AddExperiencePage = ({
     payload.append(
       "OgDesc",
       formData.OgDesc
+    );
+
+    payload.append(
+      "SchemaMarkup",
+      formData.SchemaMarkup
     );
 
     if (formData.BannerImage) {
@@ -1222,6 +1230,37 @@ setTimeout(() => navigate("/experience-pages"), 3000);
                     {errors.OgDesc && (
                       <div className="invalid-feedback">
                         {errors.OgDesc}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Schema Markup */}
+                  <div className="mb-3">
+                    <label className="form-label">
+                      Schema Markup
+                    </label>
+
+                    <textarea
+                      name="SchemaMarkup"
+                      value={formData.SchemaMarkup}
+                      placeholder="Enter Schema Markup (JSON-LD)"
+                      onChange={handleInputChange}
+                      className={`form-control ${
+                        errors.SchemaMarkup
+                          ? "is-invalid"
+                          : ""
+                      }`}
+                      rows="10"
+                      style={{
+                        minHeight: "220px",
+                        fontFamily: "monospace",
+                        fontSize: "0.85rem",
+                      }}
+                    ></textarea>
+
+                    {errors.SchemaMarkup && (
+                      <div className="invalid-feedback">
+                        {errors.SchemaMarkup}
                       </div>
                     )}
                   </div>

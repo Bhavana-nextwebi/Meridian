@@ -9,6 +9,11 @@ import {
   fetchExperienceSubcategoryCardsByGuid,
   deleteExperienceSubcategoryCard,
 } from "../../services/experienceSubcategoryCardServices";
+import {
+  addExperienceSubcategoryPage,
+  updateExperienceSubcategoryPage,
+  fetchExperienceSubcategoryPageByGuid,
+} from "../../services/experienceSubcategoryPageServices";
 import { handleErrors } from "../../utils/errorHandler";
 import { confirmDelete } from "../Common/OtherElements/confirmDeleteClone";
 import { Loading } from "../Common/OtherElements/Loading";
@@ -22,6 +27,10 @@ const initialFormState = {
   DisplayOrder: "",
 };
 
+const initialSectionFormState = {
+  CardTitle: "",
+};
+
 export const ExperienceSubcategoryCardDetails = () => {
   const { experienceSubcategoryGuid } = useParams();
   const [cards, setCards] = useState([]);
@@ -30,6 +39,15 @@ export const ExperienceSubcategoryCardDetails = () => {
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Page-level "Card section" content. No page record exists yet for a
+  // subcategory until one is explicitly saved here - GetByGuid legitimately
+  // 404s ("Experience subcategory page does not exist") in that case, so
+  // that specific response is treated as "nothing saved yet", not an error.
+  const [pageRecord, setPageRecord] = useState(null);
+  const [sectionFormData, setSectionFormData] = useState(initialSectionFormState);
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [isSectionSaving, setIsSectionSaving] = useState(false);
 
   const loadCards = async () => {
     setLoading(true);
@@ -43,8 +61,37 @@ export const ExperienceSubcategoryCardDetails = () => {
     }
   };
 
+  const loadSection = async () => {
+    setSectionLoading(true);
+    try {
+      const data = await fetchExperienceSubcategoryPageByGuid(experienceSubcategoryGuid);
+      if (data) {
+        setPageRecord(data);
+        setSectionFormData({ CardTitle: data.cardTitle || "" });
+      } else {
+        setPageRecord(null);
+        setSectionFormData(initialSectionFormState);
+      }
+    } catch (error) {
+      // No page has been saved for this subcategory yet - this is an
+      // expected state, not a failure, so don't show an error toast for it.
+      const notFound =
+        error?.response?.status === 404 ||
+        error?.response?.data?.message === "Experience subcategory page does not exist";
+      if (notFound) {
+        setPageRecord(null);
+        setSectionFormData(initialSectionFormState);
+      } else {
+        handleErrors(error);
+      }
+    } finally {
+      setSectionLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadCards();
+    loadSection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienceSubcategoryGuid]);
 
@@ -142,6 +189,72 @@ export const ExperienceSubcategoryCardDetails = () => {
     }
   };
 
+  // --- Card section (page-level) handlers ---
+
+  const handleSectionInputChange = (e) => {
+    const { name, value } = e.target;
+    setSectionFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSectionSubmit = async (e) => {
+    e.preventDefault();
+
+    setIsSectionSaving(true);
+    try {
+      const payload = new FormData();
+
+      if (pageRecord?.id) {
+        // A page record already exists. The update endpoint replaces the
+        // whole record rather than patching individual fields, so every
+        // other field has to be resent unchanged here or it gets wiped to
+        // null - only CardTitle is actually being changed on this screen.
+        payload.append("Id", pageRecord.id);
+        payload.append("ExperienceSubcategoryName", pageRecord.experienceSubcategoryName || "");
+        payload.append("BannerTitle", pageRecord.bannerTitle || "");
+        payload.append("BannerDesc", pageRecord.bannerDesc || "");
+        payload.append("Title", pageRecord.title || "");
+        payload.append("Description", pageRecord.description || "");
+        payload.append("WhyChooseTitle", pageRecord.whyChooseTitle || "");
+        payload.append("WhyChooseDesc", pageRecord.whyChooseDesc || "");
+        payload.append("CtaTitle", pageRecord.ctaTitle || "");
+        payload.append("CtaDescription", pageRecord.ctaDescription || "");
+        payload.append("ButtonText", pageRecord.buttonText || "");
+        payload.append("LightsTitle", pageRecord.lightsTitle || "");
+        payload.append("LightsSubTitle", pageRecord.lightsSubTitle || "");
+        payload.append("LightsDescription", pageRecord.lightsDescription || "");
+        payload.append("SectionNeedsTitle", pageRecord.sectionNeedsTitle || "");
+        payload.append("WeddingSectionTitle", pageRecord.weddingSectionTitle || "");
+        payload.append("PageTitle", pageRecord.pageTitle || "");
+        payload.append("MetaKeys", pageRecord.metaKeys || "");
+        payload.append("MetaDesc", pageRecord.metaDesc || "");
+        payload.append("OgTitle", pageRecord.ogTitle || "");
+        payload.append("OgDesc", pageRecord.ogDesc || "");
+        // Image fields are intentionally left out - the main page form only
+        // sends them when a new file is chosen, so the update endpoint
+        // already treats "no file in the payload" as "keep the existing
+        // image" for these.
+      } else {
+        // No page record yet for this subcategory - create one. Everything
+        // else naturally goes up empty/default since there's nothing to
+        // carry forward yet.
+        payload.append("ExperienceSubcategoryGuid", experienceSubcategoryGuid);
+      }
+      payload.append("CardTitle", sectionFormData.CardTitle);
+
+      if (pageRecord?.id) {
+        await updateExperienceSubcategoryPage(payload);
+      } else {
+        await addExperienceSubcategoryPage(payload);
+      }
+      toast.success("Card section saved successfully!");
+      loadSection();
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setIsSectionSaving(false);
+    }
+  };
+
   return (
     <>
       <div className="row">
@@ -166,6 +279,34 @@ export const ExperienceSubcategoryCardDetails = () => {
       </div>
 
       <div className="card mt-xxl-n5 p-3">
+        <div className="card-header-wrapper p-1">
+          <h5 className="blogs-heading">Card Section</h5>
+        </div>
+        {sectionLoading ? (
+          <Loading />
+        ) : (
+          <form onSubmit={handleSectionSubmit} className="mt-3">
+            <div className="row">
+              <div className="mb-3 col-lg-6">
+                <label className="form-label">Card Title</label>
+                <input
+                  type="text"
+                  name="CardTitle"
+                  value={sectionFormData.CardTitle}
+                  placeholder="Enter Card Title"
+                  onChange={handleSectionInputChange}
+                  className="form-control"
+                />
+              </div>
+            </div>
+            <button type="submit" className="btn btn-secondary" disabled={isSectionSaving}>
+              {isSectionSaving ? "Saving" : "Save Card Section"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className="card mt-3 p-3">
         <div className="card-header-wrapper p-1">
           <h5 className="blogs-heading">{editingId ? "Edit Card" : "Add Card"}</h5>
         </div>
