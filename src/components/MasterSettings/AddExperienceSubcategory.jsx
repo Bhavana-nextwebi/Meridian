@@ -9,7 +9,7 @@ import ComponentHeader from '../Common/OtherElements/ComponentHeader';
 
 // Base host to prepend to image paths returned by the API (they come back
 // as relative paths, e.g. "uploads/experience/foo.png").
-const IMAGE_BASE_URL = 'https://602.nxtai.dev/';
+const IMAGE_BASE_URL = 'http://api2.meridianbythelawns.com/';
 
 const buildImageUrl = (path) => {
   if (!path) return '';

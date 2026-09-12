@@ -7,7 +7,7 @@ import {
 import { handleErrors } from "../../utils/errorHandler";
 import allImages from "../../assets/images-import";
 
-const IMAGE_BASE_URL = "https://602.nxtai.dev/";
+const IMAGE_BASE_URL = "http://api2.meridianbythelawns.com/";
 
 const resolveMediaUrl = (path) => {
   if (!path) return "";

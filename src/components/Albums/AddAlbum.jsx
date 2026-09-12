@@ -14,7 +14,7 @@ import { handleErrors } from "../../utils/errorHandler";
 import { Loading } from "../Common/OtherElements/Loading";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 
-const IMAGE_BASE_URL = "https://602.nxtai.dev/";
+const IMAGE_BASE_URL = "https://api2.meridianbythelawns.com/";
 
 const resolveMediaUrl = (path) => {
   if (!path) return "";

@@ -150,7 +150,7 @@ const Header = () => {
                       className="rounded-circle header-profile-user"
                      src={
   profileImage
-    ? `https://602.nxtai.dev/${profileImage}`
+    ? `https://api2.meridianbythelawns.com/${profileImage}`
     : allImages.defaultprofile
 }
                       alt="Header Avatar"

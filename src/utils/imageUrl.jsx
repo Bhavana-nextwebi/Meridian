@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://602.nxtai.dev";
+const API_BASE_URL = "https://api2.meridianbythelawns.com";
 
 /**
  * Prefixes a relative image path returned by the API with the base URL.

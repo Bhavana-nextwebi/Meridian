@@ -14,7 +14,7 @@ const generateSlug = (value) =>
     .replace(/[^a-zA-Z0-9 ]/g, '')
     .replace(/\s+/g, '-');
 
-const IMAGE_BASE_URL = 'https://602.nxtai.dev/';
+const IMAGE_BASE_URL = 'http://api2.meridianbythelawns.com/';
 
 // Prefixes a relative image path returned by the API with the base URL so the
 // edit-mode preview can load it. Leaves already-absolute URLs untouched.

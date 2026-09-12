@@ -112,7 +112,7 @@ export const ProfilePageContent = ({ onBack }) => {
                       <div className="profile-user position-relative d-inline-block mx-auto mb-4">
                         {currentProfileImage ? (
                           <img
-                            src={`https://602.nxtai.dev/${currentProfileImage}`}
+                            src={`http://api2.meridianbythelawns.com/${currentProfileImage}`}
                             className="rounded-circle avatar-xl img-thumbnail user-profile-image shadow"
                             alt="user-profile-image"
                           />

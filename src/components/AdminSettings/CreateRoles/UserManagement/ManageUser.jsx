@@ -173,7 +173,7 @@ export const ManageUser = () => {
                                   <img
                                     src={
                                       item.profileImage
-                                        ? `https://602.nxtai.dev/${item.profileImage}`
+                                        ? `http://api2.meridianbythelawns.com/${item.profileImage}`
                                         : allImages.defaultprofile
                                     }
                                     alt="Profile"

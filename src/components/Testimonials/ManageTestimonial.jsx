@@ -17,7 +17,7 @@ import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 import allImages from "../../assets/images-import";
 import { TestimonialFormModal } from "./TestimonialFormModal";
 
-const IMAGE_BASE_URL = "https://602.nxtai.dev/";
+const IMAGE_BASE_URL = "http://api2.meridianbythelawns.com/";
 
 const resolveImageUrl = (path) => {
   if (!path) return "";

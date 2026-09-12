@@ -12,7 +12,7 @@ import { Pagination } from "../Common/TableComponent/Pagination";
 import { usePageLevelAccess } from "../../hooks/usePageLevelAccess";
 import allImages from "../../assets/images-import";
 
-const IMAGE_BASE_URL = "https://602.nxtai.dev/";
+const IMAGE_BASE_URL = "https://api2.meridianbythelawns.com/";
 
 const resolveImageUrl = (path) => {
   if (!path) return "";
