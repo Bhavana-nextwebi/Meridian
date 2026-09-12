@@ -7,17 +7,8 @@ import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import ComponentHeader from '../Common/OtherElements/ComponentHeader';
 
-// Same slugify logic used for Blog URL generation, reused here so the
-// auto-generated URL stays consistent across the app.
-const generateSlug = (value) =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-zA-Z0-9 ]/g, '')
-    .replace(/\s+/g, '-');
-
 const validateExperienceSubcategory = (formData) => {
-  const errors = { experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' };
+  const errors = { experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' };
 
   if (!formData.experienceCategoryId) {
     errors.experienceCategoryId = 'Experience Category is required.';
@@ -27,13 +18,17 @@ const validateExperienceSubcategory = (formData) => {
     errors.experienceSubcategoryName = 'Experience Subcategory Name is required.';
   }
 
+  if (!formData.experienceSubcategoryUrl || !formData.experienceSubcategoryUrl.trim()) {
+    errors.experienceSubcategoryUrl = 'Experience Subcategory URL is required.';
+  }
+
   if (formData.displayOrder === '' || formData.displayOrder === null || formData.displayOrder === undefined) {
     errors.displayOrder = 'Display Order is required.';
   } else if (isNaN(formData.displayOrder) || Number(formData.displayOrder) < 0) {
     errors.displayOrder = 'Display Order must be a valid non-negative number.';
   }
 
-  const valid = !errors.experienceCategoryId && !errors.experienceSubcategoryName && !errors.displayOrder;
+  const valid = !errors.experienceCategoryId && !errors.experienceSubcategoryName && !errors.experienceSubcategoryUrl && !errors.displayOrder;
   return { valid, errors };
 };
 
@@ -118,7 +113,7 @@ const experienceCategorySelectStyles = {
 
 export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, onSuccess, setSelectedPageGroup, setEditMode }) => {
   const [formData, setFormData] = useState({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
-  const [errors, setErrors] = useState({ experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' });
+  const [errors, setErrors] = useState({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
   const [apiError, setApiError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [experienceCategories, setExperienceCategories] = useState([]);
@@ -143,7 +138,7 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
           setFormData({
             experienceCategoryId: data.experienceCategoryId || '',
             experienceSubcategoryName: data.experienceSubcategoryName || '',
-            experienceSubcategoryUrl: data.experienceSubcategoryUrl || generateSlug(data.experienceSubcategoryName || ''),
+            experienceSubcategoryUrl: data.experienceSubcategoryUrl || '',
             displayOrder: data.displayOrder ?? '',
           });
         } catch (error) {
@@ -158,16 +153,7 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
-    if (name === 'experienceSubcategoryName') {
-      setFormData((prevData) => ({
-        ...prevData,
-        experienceSubcategoryName: value,
-        experienceSubcategoryUrl: generateSlug(value),
-      }));
-    } else {
-      setFormData((prevData) => ({ ...prevData, [name]: value }));
-    }
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
   const categoryOptions = experienceCategories.map((category) => ({
@@ -231,7 +217,7 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
 
   const handleAddNewClick = () => {
     setFormData({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
-    setErrors({ experienceCategoryId: '', experienceSubcategoryName: '', displayOrder: '' });
+    setErrors({ experienceCategoryId: '', experienceSubcategoryName: '', experienceSubcategoryUrl: '', displayOrder: '' });
     setApiError('');
     setSelectedPageGroup(null);
     setEditMode(false);
@@ -290,15 +276,16 @@ export const AddExperienceSubcategory = ({ editMode = false, initialData = {}, o
                   </div>
                   <div className="col-lg-3 col-md-6 col-sm-12">
                     <div className="mb-3">
-                      <label htmlFor="experience_subcategory_url" className="form-label">Experience Subcategory URL</label>
+                      <label htmlFor="experience_subcategory_url" className="form-label">Experience Subcategory URL <span className='required-field'>*</span></label>
                       <input
                         type="text"
                         name="experienceSubcategoryUrl"
                         value={formData.experienceSubcategoryUrl}
-                        className="form-control"
-                        placeholder='Auto-generated from name'
-                        disabled
+                        onChange={handleInputChange}
+                        className={`form-control ${errors.experienceSubcategoryUrl ? 'is-invalid' : ''}`}
+                        placeholder='Enter Experience Subcategory URL'
                       />
+                      {errors.experienceSubcategoryUrl && <div className="invalid-feedback">{errors.experienceSubcategoryUrl}</div>}
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-6 col-sm-12">

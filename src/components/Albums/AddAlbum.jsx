@@ -49,6 +49,31 @@ const getYouTubeEmbedUrl = (url) => {
   return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
 };
 
+// Lets the user paste a full <iframe src="..."></iframe> embed snippet
+// (common for Vimeo, Dailymotion, etc.) instead of just a bare URL.
+const IFRAME_SRC_REGEX = /<iframe[^>]*\ssrc=["']([^"']+)["'][^>]*>/i;
+
+const extractIframeSrc = (value) => {
+  if (!value) return null;
+  const match = value.match(IFRAME_SRC_REGEX);
+  return match ? match[1] : null;
+};
+
+// Resolves whatever was pasted into VideoUrl into something renderable:
+// either an iframe src (YouTube embed or a raw iframe's src attribute)
+// or a plain URL to hand to a <video> tag.
+const resolveVideoPreview = (rawValue) => {
+  if (!rawValue) return null;
+  const trimmed = rawValue.trim();
+  const iframeSrc = extractIframeSrc(trimmed);
+  const candidate = iframeSrc || trimmed;
+  const youtubeEmbed = getYouTubeEmbedUrl(candidate);
+
+  if (youtubeEmbed) return { type: "iframe", src: youtubeEmbed };
+  if (iframeSrc) return { type: "iframe", src: iframeSrc };
+  return { type: "video", src: candidate };
+};
+
 const validateAlbumData = (formData) => {
   const errors = {};
 
@@ -74,13 +99,19 @@ const validateAlbumData = (formData) => {
         errors.AlbumVideo = "Please upload a video file.";
       }
     } else if (formData.VideoSource === VIDEO_SOURCES.URL) {
-      if (!formData.VideoUrl || !formData.VideoUrl.trim()) {
+      const raw = formData.VideoUrl?.trim();
+      if (!raw) {
         errors.VideoUrl = "Please enter a video URL.";
       } else {
-        try {
-          new URL(formData.VideoUrl.trim());
-        } catch {
-          errors.VideoUrl = "Please enter a valid video URL.";
+        const iframeSrc = extractIframeSrc(raw);
+        if (raw.includes("<iframe") && !iframeSrc) {
+          errors.VideoUrl = "Couldn't find a src in that embed code.";
+        } else {
+          try {
+            new URL(iframeSrc || raw);
+          } catch {
+            errors.VideoUrl = "Please enter a valid video URL or embed code.";
+          }
         }
       }
     }
@@ -311,7 +342,10 @@ export const AddAlbum = ({
         payload.append("AlbumVideo", formData.AlbumVideo);
       }
       if (formData.VideoSource === VIDEO_SOURCES.URL && formData.VideoUrl) {
-        payload.append("VideoUrl", formData.VideoUrl.trim());
+        // Store the resolved src rather than raw <iframe> markup, so the
+        // public-facing page just gets a clean URL to work with.
+        const raw = formData.VideoUrl.trim();
+        payload.append("VideoUrl", extractIframeSrc(raw) || raw);
       }
     }
 
@@ -369,7 +403,7 @@ export const AddAlbum = ({
     setEditMode(false);
   };
 
-  const youtubeEmbedUrl = getYouTubeEmbedUrl(formData.VideoUrl);
+  const videoPreview = resolveVideoPreview(formData.VideoUrl);
 
   return (
     <>
@@ -556,7 +590,7 @@ export const AddAlbum = ({
                           type="text"
                           name="VideoUrl"
                           value={formData.VideoUrl}
-                          placeholder="https://example.com/video.mp4 or a YouTube link"
+                          placeholder="https://example.com/video.mp4, a YouTube link, or paste an <iframe> embed code"
                           onChange={handleInputChange}
                           className={`form-control ${
                             errors.VideoUrl ? "is-invalid" : ""
@@ -653,23 +687,24 @@ export const AddAlbum = ({
 
               {formData.AlbumType === ALBUM_TYPES.VIDEO &&
                 formData.VideoSource === VIDEO_SOURCES.URL &&
-                formData.VideoUrl && (
+                videoPreview && (
                   <div className="card mt-xxl-n5 p-3">
                     <div className="card-header-wrapper">
                       <h5 className="">Video Preview</h5>
                     </div>
                     <div className="mt-3">
-                      {youtubeEmbedUrl ? (
-                        // YouTube links are pages, not direct media files, so
-                        // they can't be played with a <video> tag — embed
-                        // them in an iframe using the YouTube player instead.
+                      {videoPreview.type === "iframe" ? (
+                        // Either a YouTube link converted to its embed form,
+                        // or the src pulled out of a pasted <iframe> snippet
+                        // (Vimeo, Dailymotion, etc.) — both play in an iframe,
+                        // not a <video> tag.
                         <div
                           className="ratio ratio-16x9 rounded overflow-hidden"
                           style={{ maxHeight: "220px" }}
                         >
                           <iframe
-                            src={youtubeEmbedUrl}
-                            title="YouTube video preview"
+                            src={videoPreview.src}
+                            title="Video preview"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             allowFullScreen
                             style={{ border: 0 }}
@@ -677,7 +712,7 @@ export const AddAlbum = ({
                         </div>
                       ) : (
                         <video
-                          src={formData.VideoUrl}
+                          src={videoPreview.src}
                           controls
                           className="w-100 rounded"
                           style={{ maxHeight: "220px" }}

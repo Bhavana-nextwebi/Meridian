@@ -182,12 +182,6 @@ export const ManageVenueCategoryFaq = () => {
 
   // --- Faq description (page-level) handlers ---
 
-  const handleFaqSectionInputChange = (e) => {
-    const { name, value } = e.target;
-    setFaqSectionFormData((prevData) => ({ ...prevData, [name]: value }));
-    setFaqSectionErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
-  };
-
   // TinyMCE's onEditorChange gives back the HTML content directly (no
   // event object), so it needs its own handler instead of reusing
   // handleFaqSectionInputChange.
@@ -221,7 +215,7 @@ export const ManageVenueCategoryFaq = () => {
     setIsFaqSectionSaving(true);
     try {
       const payload = new FormData();
-     payload.append("Id", pageRecord.id);
+      payload.append("Id", pageRecord.id);
       payload.append("VenueCategoryId", pageRecord.venueCategoryId);
       payload.append("BannerTitle", pageRecord.bannerTitle || "");
       payload.append("BannerImage", pageRecord.bannerImage || "");
@@ -245,9 +239,8 @@ export const ManageVenueCategoryFaq = () => {
       payload.append("PageTitle", pageRecord.pageTitle || "");
       payload.append("MetaKey", pageRecord.metaKey || "");
       payload.append("MetaDesc", pageRecord.metaDesc || "");
-       payload.append("OgTitle", pageRecord.ogTitle);
-payload.append("OgDesc", pageRecord.ogDesc);
-
+      payload.append("OgTitle", pageRecord.ogTitle || "");
+      payload.append("OgDesc", pageRecord.ogDesc || "");
 
       await updateVenueCategoryPage(payload);
       toast.success("FAQ description updated successfully!");

@@ -346,7 +346,7 @@ export const AddLandingPage = ({
                       menubar: false,
                       plugins: ["advlist", "autolink", "link", "lists", "wordcount", "code"],
                       toolbar:
-                        "undo redo | bold italic | alignleft aligncenter alignright | bullist numlist",
+                        "undo redo | bold italic | alignleft aligncenter alignright | bullist numlist | code",
                     }}
                     onEditorChange={(value) => handleEditorChange("LpDesc", value)}
                   />
@@ -409,7 +409,7 @@ export const AddLandingPage = ({
                         menubar: false,
                         plugins: ["advlist", "autolink", "link", "lists", "wordcount", "code"],
                         toolbar:
-                          "undo redo | bold italic | alignleft aligncenter alignright | bullist numlist",
+                          "undo redo | bold italic | alignleft aligncenter alignright | bullist numlist | code",
                       }}
                       onEditorChange={(value) =>
                         handleEditorChange("BanquetHallDescription", value)
@@ -498,7 +498,7 @@ export const AddLandingPage = ({
                         menubar: false,
                         plugins: ["advlist", "autolink", "link", "lists", "wordcount", "code"],
                         toolbar:
-                          "undo redo | bold italic | alignleft aligncenter alignright | bullist numlist",
+                          "undo redo | bold italic | alignleft aligncenter alignright | bullist numlist | code",
                       }}
                       onEditorChange={(value) =>
                         handleEditorChange("WhyChooseDescription", value)
